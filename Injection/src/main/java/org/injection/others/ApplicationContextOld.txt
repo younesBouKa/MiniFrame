@@ -1,0 +1,414 @@
+package org.injection;
+
+import javax.inject.Inject;
+import java.lang.reflect.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.injection.annotations.BeanScanPackages;
+import org.injection.annotations.Component;
+import org.injection.dependency.LoopDetection;
+import org.injection.enums.DependencyType;
+import org.injection.enums.ScopeType;
+import org.tools.exceptions.FrameworkException;
+import org.tools.utils.Tools;
+
+
+public class ApplicationContextOld {
+
+    private static ApplicationContextOld INSTANCE;
+    private static Set<Class<?>> beanImplementationsSet;
+    private static Set<Method> beanFactoriesSet;
+    private static Map<Class, Object> instancesCache;
+    private static Class beanScanRootClass;
+    private static LoopDetection loopDetection;
+
+    public static Function<Class<?>, ?> buildBeanProvider(){
+        return getInstance(beanScanRootClass)::getBeanInstance;
+    }
+
+    public static ApplicationContextOld getInstance(Class application){
+        if(application==null)
+            throw new FrameworkException("Root application class must not be null");
+        if(INSTANCE == null)
+            INSTANCE = new ApplicationContextOld(application);
+        return INSTANCE;
+    }
+
+    private ApplicationContextOld(Class application){
+        beanScanRootClass = application;
+        scanForBeans();
+    }
+
+    private static void scanForBeans(){
+        if(beanScanRootClass==null){
+            throw new FrameworkException("No scan packages is set for beans");
+        }
+        logger.debug("Scanning for beans started ... ");
+        Set<String> packagesToScan = getBeanScanPackagesFromClass(beanScanRootClass);
+        logger.debug("Searching for beans in packages : "+packagesToScan.stream().collect(Collectors.toList()));
+        Set<Class> allPackageClasses = new HashSet<>();
+        for (String packageName : packagesToScan){
+            allPackageClasses.addAll(Tools.getClasses(packageName));
+        }
+        beanImplementationsSet = allPackageClasses
+                .stream()
+                .filter(clazz -> clazz.isAnnotationPresent(Component.class))
+                .filter(clazz -> !clazz.isInterface())
+                .map(clazz-> (Class<?>)clazz)
+                .collect(Collectors.toSet());
+        beanFactoriesSet = allPackageClasses
+                .stream()
+                .flatMap(clazz ->
+                        Arrays.stream(clazz.getMethods())
+                                .filter(method -> method.isAnnotationPresent(Component.class))
+                )
+                .filter(method -> method.getReturnType().isInterface())
+                .collect(Collectors.toSet());
+
+        logger.debug("Available beans implementations : ["+beanImplementationsSet.size()+"]");
+        logger.debug("Available beans factories : ["+beanFactoriesSet.size()+"]");
+        logger.debug("Scanning for beans ended in packages "+packagesToScan.stream().collect(Collectors.toList())+"");
+        instancesCache = new ConcurrentHashMap<>();
+    }
+
+    public synchronized <T> T getBeanInstance(Class<T> clazz){
+        if(beanImplementationsSet.isEmpty() && beanFactoriesSet.isEmpty())
+            throw new FrameworkException(
+                    "No bean implementation or bean factory is available, "+
+                            "try to verify bean scan package"
+            );
+        loopDetection = new LoopDetection();
+        try{
+            return getBean(clazz, DependencyType.FIRST);
+        }finally {
+            loopDetection.print();
+            loopDetection.clear();
+        }
+    }
+
+    private  <T> T getBean(Class<T> clazz, DependencyType dependencyType) {
+        if (!clazz.isInterface()) {
+            throw new FrameworkException("Class " + clazz.getName() + " should be an interface");
+        }
+        // add dependency to loop detection
+        loopDetection.addDependency(dependencyType, clazz);
+
+        T beanToReturn = null;
+        // search for possible implementation/factory
+        final Class<T> implementation = findImplementationByInterface(clazz);
+        final Method factory = findFactoryByInterface(clazz);
+        if (implementation!=null && factory!=null){
+            throw new FrameworkException("Factory and implementation class are founded for interface: "
+                    +clazz.getCanonicalName()
+                    +"["+implementation.getCanonicalName()
+                    +" and "
+                    +factory.toGenericString()+"]"
+            );
+        }
+        // get annotation from implementation/factory
+        Component annotation = implementation!=null ?
+                     implementation.getAnnotation(Component.class)
+                     : factory.getAnnotation(Component.class);
+        final boolean isSingleton = annotation!=null && annotation.scope().equals(ScopeType.Singleton);
+        // check if exist in cache and is singleton
+        T existingInstance = (T) instancesCache.get(clazz);
+        if(existingInstance!=null){
+            if(isSingleton){
+                logger.debug("Getting instance from cache: "+ existingInstance.getClass());
+                beanToReturn = existingInstance;
+            }
+        }
+
+        // check if implemented with class
+        if(beanToReturn==null){
+            if(implementation!=null){
+                beanToReturn = createBeanFromImplementation(implementation);
+                if(beanToReturn!=null){
+                    logger.debug(
+                            "Getting instance from implementation class: "+
+                                    beanToReturn.getClass()
+                    );
+                }
+            }
+        }
+
+        // check if a factory exist
+        if(beanToReturn==null){
+            logger.debug("No class implement this interface: " + clazz.getName());
+            if(factory!=null){
+                beanToReturn = clazz.cast(createBeanFromFactoryMethod(factory));
+            }
+
+            if(beanToReturn!=null){
+                logger.debug(
+                        "Getting instance from factory method: "+
+                                factory.getDeclaringClass().getCanonicalName()+"."+
+                                factory.getName()
+                );
+            }
+        }
+
+        // add to cache or throw exception
+        if(beanToReturn!=null){
+            instancesCache.put(clazz, beanToReturn);
+            loopDetection.resolveDependency(clazz);
+            return beanToReturn;
+        }else{
+            throw new FrameworkException("No bean factory for this interface : "+clazz.getName());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Method findFactoryByInterface(Class interfaceItem){
+        final Set<Method> interfaceFactories = beanFactoriesSet.stream()
+                .filter(factoryMethod -> factoryMethod.getReturnType().getName().equals(interfaceItem.getName()))
+                .collect(Collectors.toSet());
+
+        if (interfaceFactories.size() > 1) {
+            throw new FrameworkException(
+                    "There are more than 1 factory: " + interfaceItem.getName()+" "+
+                            interfaceFactories
+                                    .stream()
+                                    .map(method->
+                                            method.getDeclaringClass().getCanonicalName()
+                                            +"."+method.getName()
+                                    )
+                                    .collect(Collectors.toList())
+            );
+        }
+
+        return interfaceFactories.stream()
+                .findFirst()
+                .orElse(null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Class<T> findImplementationByInterface(Class<T> interfaceItem) {
+        final Set<Class<T>> classesWithInterfaces = beanImplementationsSet.stream()
+                .filter(componentBean ->
+                        Arrays.stream(componentBean.getInterfaces())
+                                .anyMatch(compInterface -> compInterface.getName().equals(interfaceItem.getName()))
+                )
+                .map(component -> (Class<T>)component)
+                .collect(Collectors.toSet());
+
+        // TODO to modify later by introducing qualifiers
+        if (classesWithInterfaces.size() > 1) {
+            throw new FrameworkException(
+                    "There are more than one implementation for: " + interfaceItem.getName()+
+                    " "+classesWithInterfaces.stream().map(clazz-> clazz.getCanonicalName()).collect(Collectors.toList())
+            );
+        }
+
+        return (Class<T>) classesWithInterfaces.stream()
+                .findFirst()
+                .orElse(null);
+    }
+
+    private <T> T createBeanFromImplementation(Class<T> implementation) {
+        try {
+            final Constructor<T> constructor = findConstructor(implementation);
+            final Object[] parameters = getConstructorParametersValue(constructor);
+            T instance = constructor.newInstance(parameters);
+            populateInjectedFields(instance);
+            populateInjectedMethods(instance);
+            return instance;
+        } catch (FrameworkException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FrameworkException(e);
+        }
+    }
+
+    private Map<Field,Object> populateInjectedFields(Object instance){
+        // process only fields with @Inject annotation and where type is interface
+        /*
+          Injectable fields:
+                are annotated with @Inject.
+                are not final.
+                may have any otherwise valid name.
+          Ex:
+            @Inject FieldModifiers opt Type VariableDeclarators;
+         */
+        Class instanceClass = instance.getClass();
+        final Field[] declaredFields = instanceClass.getDeclaredFields();
+        final Map<Field,Object> processedFields = new HashMap<>();
+        for (Field field : declaredFields){
+            boolean isFinal = Modifier.isFinal(field.getModifiers());
+            boolean isInjectable = field.isAnnotationPresent(Inject.class);
+            boolean isInterface =  field.getType().isInterface();
+            if(isFinal)
+                continue;
+            if(!isInjectable)
+                continue;
+            if(!isInterface){
+                throw new FrameworkException(
+                        "Field ["+field.getName()+"] "+
+                                "in class ["+instanceClass.getName()+"] "+
+                                "annotated with @Inject but is not an interface"
+                        );
+            }
+            Object fieldValue = getBean(field.getType(), DependencyType.FIELD);
+            try {
+                field.setAccessible(true);
+                field.set(instance, fieldValue);
+                processedFields.put(field, fieldValue);
+            }catch (Exception e){
+                logger.error(
+                        "Can't set value for field ["+field.getName()+"] "+
+                                "from class "+instanceClass.getName());
+                throw new FrameworkException(e);
+            }
+        }
+        return processedFields;
+    }
+
+    private Map<Method,List> populateInjectedMethods(Object instance){
+        // process setters (starts with setXX) with @Inject annotation AND where param type is interface AND return type is void
+        /*
+            Injectable methods:
+                are annotated with @Inject.
+                are not abstract.
+                do not declare type parameters of their own. ( TODO to see later)
+                may return a result
+                may have any otherwise valid name.
+                accept zero or more dependencies as arguments.
+            EX:
+                @Inject MethodModifiers opt ResultType Identifier(FormalParameterListopt) Throwsopt MethodBody
+        */
+        Class instanceClass = instance.getClass();
+        final Method[] methods = instanceClass.getMethods();
+        final Map<Method,List> processedMethods = new HashMap<>();
+        for (Method method : methods){
+            boolean isInjectable = method.isAnnotationPresent(Inject.class);
+            boolean isAbstract = Modifier.isAbstract(method.getModifiers());
+            if(isInjectable && isAbstract)
+                logger.error(
+                        "Method "+method.getName()+" annotated with @Inject can't be abstract"
+                );
+            if(isAbstract)
+                continue;
+            if(!isInjectable)
+                continue;
+            Parameter[] parameters = method.getParameters();
+            if(parameters.length==0){
+                logger.error(
+                        "Method "+method.getName()+" annotated with @Inject has no parameters"
+                );
+                continue;
+            }
+            List<Object> parametersValues = new ArrayList<>();
+            for (Parameter parameter : parameters){
+                boolean isParameterOfTypeInterface = parameter
+                        .getType()
+                        .isInterface();
+                if(!isParameterOfTypeInterface){
+                    throw new FrameworkException(
+                            "Parameter ["+parameter.getName()+"] "+
+                                    "in injected  ["+instanceClass.getName()+"."+method.getName()+"] "+
+                                    "but is not of type interface"
+                    );
+                }
+                Object paramValue = getBean(parameter.getType(), DependencyType.METHOD_ARGUMENT);
+                parametersValues.add(paramValue);
+            }
+
+            try {
+                method.invoke(instance, parametersValues.toArray());
+                processedMethods.put(method, parametersValues);
+            }catch (Exception e){
+                logger.error(
+                        "Can't call injected method: ["+instanceClass.getName()+"."+method.getName()+"] " +
+                                "with params ["+ Arrays.stream(parameters).map(Parameter::getName).collect(Collectors.toList())+"] "
+                );
+                throw new FrameworkException(e);
+            }
+        }
+        return processedMethods;
+    }
+
+    private Object createBeanFromFactoryMethod(Method factory) {
+        try {
+            final Constructor<?> constructor = findConstructor((Class<?>) factory.getDeclaringClass());
+            final Object[] parameters = getConstructorParametersValue(constructor);
+            Object factoryClassObj =  constructor.newInstance(parameters);
+            final Object[] factoryParametersValues = getMethodParametersValues(factory);
+            return factory.invoke(factoryClassObj, factoryParametersValues);
+        } catch (FrameworkException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FrameworkException(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Constructor<T> findConstructor(Class<T> clazz) {
+        final Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
+        if (constructors.length == 1) {
+            return constructors[0];
+        }
+
+        final Set<Constructor<T>> constructorsWithAnnotation = Arrays.stream(constructors)
+                .filter(constructor -> constructor.isAnnotationPresent(Inject.class))
+                .collect(Collectors.toSet());
+        if (constructorsWithAnnotation.size() > 1) {
+            throw new FrameworkException("There are more than 1 constructor with Inject annotation: " + clazz.getName());
+        }
+        return constructorsWithAnnotation.stream()
+                .findFirst()
+                .orElseThrow(() -> new FrameworkException("Cannot find constructor with annotation Inject: " + clazz.getName()));
+    }
+
+    private <T> Object[] getConstructorParametersValue(Constructor<T> constructor) {
+        final Class<?>[] parameterTypes = constructor.getParameterTypes();
+        return Arrays.stream(parameterTypes)
+                .map(paramSrc -> {
+                    try {
+                        return getBean(paramSrc, DependencyType.CONSTRUCTOR_ARGUMENT);
+                    }catch (Exception e){
+                        throw new FrameworkException(
+                                "Can't get instance of parameter: ["+paramSrc.getCanonicalName()
+                                        +"] for constructor: ["+constructor.getDeclaringClass().getCanonicalName()+"]"
+                        );
+                    }
+                })
+                .toArray(Object[]::new);
+    }
+
+    private <T> Object[] getMethodParametersValues(Method method) {
+        final Class<?>[] parameterTypes = method.getParameterTypes();
+        return Arrays.stream(parameterTypes)
+                .map(paramSrc -> {
+                    try {
+                        return getBean(paramSrc, DependencyType.METHOD_ARGUMENT);
+                    }catch (Exception e){
+                        throw new FrameworkException(
+                                "Can't get instance of parameter: "+paramSrc.getCanonicalName()
+                                +" for method: "+method.getDeclaringClass().getCanonicalName()+"."+method.getName()
+                        );
+                    }
+                })
+                .toArray(Object[]::new);
+    }
+
+    private static Set<String> getBeanScanPackagesFromClass(Class application){
+        final Set<String> packages = new HashSet<>();
+        if(application.isAnnotationPresent(BeanScanPackages.class)){
+            BeanScanPackages webScanPackagesAnnotation = (BeanScanPackages) application.getAnnotation(BeanScanPackages.class);
+            String[] packagesName = webScanPackagesAnnotation.packages();
+            Arrays.stream(packagesName)
+                    .forEach(packName -> {
+                        if(!Tools.isValidPackageName(packName))
+                            throw new FrameworkException("Package name from BeanScanPackages annotation is not valid : "+packName);
+                        packages.add(packName);
+                    });
+        }else{
+            packages.add(application.getPackage().getName());
+        }
+        return packages;
+    }
+
+}

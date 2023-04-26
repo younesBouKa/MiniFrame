@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.frame</groupId>
+    <artifactId>Frame</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>Tools</module>
+        <module>Demo</module>
+        <module>Injection</module>
+        <module>Web</module>
+        <module>Agent</module>
+    </modules>
+
+    <properties>
+        <!--        general -->
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!--        libraries versions -->
+        <javax.inject.version>1</javax.inject.version>
+        <javassist.version>3.29.0-GA</javassist.version>
+        <sun.tools.version>1.8.0</sun.tools.version>
+        <log4j.api.version>2.6.1</log4j.api.version>
+        <log4j.core.version>2.6.1</log4j.core.version>
+        <servlet.api.version>3.1.0</servlet.api.version>
+        <!--        plugins versions -->
+        <maven.assembly.plugin.version>3.5.0</maven.assembly.plugin.version>
+        <maven.jar.plugin.version>3.2.0</maven.jar.plugin.version>
+        <!--        modules versions -->
+        <tools.version>1.0-SNAPSHOT</tools.version>
+        <agent.version>1.0-SNAPSHOT</agent.version>
+        <injection.version>1.0-SNAPSHOT</injection.version>
+        <web.version>1.0-SNAPSHOT</web.version>
+
+    </properties>
+
+    <build>
+        <plugins>
+            <!-- <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven.jar.plugin.version}</version>
+            </plugin>-->
+        </plugins>
+    </build>
+
+</project>

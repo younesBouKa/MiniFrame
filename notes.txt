@@ -1,0 +1,43 @@
+Annotations:
+    Dependency Injection:
+      - Injection
+            @BeanScanPackages:
+            @Component:
+      - Alternatives
+            @Alternative:
+            @AlternativeConfig:
+      - Qualifiers
+            @Qualifier:
+            @QualifierConfig:
+            @RegexQualifier:
+            @ElseFirstFound:
+            @EvalWithOR:
+            @EvalWithAND:
+            @FirstFound:
+      - Scopes
+            @TempScope
+
+    Web:
+      - Scanning
+            @WebScanPackages
+      - Web
+            @Controller:
+            @Route:
+            @Post:
+            @Get:
+            @Put:
+            @Delete:
+            @Head:
+      - Parameters
+            @Name:
+            @Names:
+            @Param:
+            @Source:
+            @BodyParam:
+            @HeaderParam:
+            @PathParam:
+            @QueryParam:
+      - Scopes
+            @RequestScope
+            @SessionScope
+

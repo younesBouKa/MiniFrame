@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.frame</groupId>
+        <artifactId>Frame</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>Tools</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>${javax.inject.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.frame</groupId>
+            <artifactId>Agent</artifactId>
+            <version>${agent.version}</version>
+            <!-- <scope>system</scope>
+              <systemPath>${project.basedir}/libs/agent.jar</systemPath>-->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>${sun.tools.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/tools.jar</systemPath>
+        </dependency>
+    </dependencies>
+
+    <build>
+       <!-- <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven.jar.plugin.version}</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase/>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven.assembly.plugin.version}</version>
+                <configuration>
+                    &lt;!&ndash; <descriptorRefs>
+                         <descriptorRef>jar-with-dependencies</descriptorRef>
+                     </descriptorRefs>
+                     <archive>
+                         <manifest>
+                             <addDefaultImplementationEntries>
+                                 true</addDefaultImplementationEntries>
+                             <addDefaultSpecificationEntries>
+                                 true</addDefaultSpecificationEntries>
+                         </manifest>
+                         <manifestEntries>
+                             <addClasspath>true</addClasspath>
+                             <Main-Class>org.demo.Launcher</Main-Class>
+                         </manifestEntries>
+                     </archive>&ndash;&gt;
+                    &lt;!&ndash;<descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+&ndash;&gt;
+                    <descriptors>
+                        <descriptor>${basedir}/assembly.xml</descriptor>
+                    </descriptors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        &lt;!&ndash; this is used for inheritance merges &ndash;&gt;
+                        <phase>package</phase>
+                        &lt;!&ndash; append to the packaging phase. &ndash;&gt;
+                        <goals>
+                            <goal>single</goal>
+                            &lt;!&ndash; goals == mojos &ndash;&gt;
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>-->
+    </build>
+
+</project>

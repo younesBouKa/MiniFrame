@@ -1,0 +1,4 @@
+org\agent\transformers\CustomTransformer.class
+org\agent\transformers\ClassLogger.class
+org\agent\transformers\ObjectLifeCycleInterceptor.class
+org\agent\Agent.class

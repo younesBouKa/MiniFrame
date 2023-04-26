@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.0"
+         metadata-complete="true"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+  <display-name>Web Application</display-name>
+
+  <context-param>
+    <param-name>DBUSER</param-name>
+    <param-value>root</param-value>
+  </context-param>
+  <context-param>
+    <param-name>DBPWD</param-name>
+    <param-value>root</param-value>
+  </context-param>
+  <context-param>
+    <param-name>DBURL</param-name>
+    <param-value>jdbc:mysql://localhost/mysql_db</param-value>
+  </context-param>
+
+  <listener>
+    <listener-class>org.web.listeners.ContextListener</listener-class>
+  </listener>
+  <listener>
+    <listener-class>org.web.listeners.SessionListener</listener-class>
+  </listener>
+  <listener>
+    <listener-class>org.web.listeners.RequestListener</listener-class>
+  </listener>
+
+  <servlet>
+    <servlet-name>WebDispatcher</servlet-name>
+    <servlet-class>org.web.WebDispatcher</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>WebDispatcher</servlet-name>
+    <url-pattern>/webapp/*</url-pattern>
+  </servlet-mapping>
+</web-app>
