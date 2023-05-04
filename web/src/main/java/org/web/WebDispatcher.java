@@ -6,12 +6,16 @@ import org.web.core.WebRequestProcessor;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.web.Constants.*;
@@ -70,11 +74,6 @@ public class WebDispatcher extends HttpServlet {
     public void callHandler(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         logger.info("New request received, RequestURI: "+req.getRequestURI());
         updateRequestAttribute(req);
-        try {
-            Collection<Part> parts = req.getParts();
-        } catch (ServletException e) {
-            throw new RuntimeException(e);
-        }
         webRequestProcessor.call(req, resp);
     }
 

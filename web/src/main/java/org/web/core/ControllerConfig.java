@@ -10,6 +10,6 @@ public interface ControllerConfig {
     boolean isInjectableParam(Class paramType);
     boolean isRouteAnnotation(Class<? extends Annotation> annotationClass);
     Set<Class<? extends Annotation>> getRouteAnnotations();
-    Object getRouteInjectedParamValue(HttpServletRequest request, HttpServletResponse response, Class<?> paramType);
+    Object getRouteInjectedParamValue(HttpServletRequest request, HttpServletResponse response, Class<?> paramType, String paramName);
     Object getFormattedValue(Object value, Class<?> type);
 }

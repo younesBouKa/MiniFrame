@@ -3,12 +3,16 @@ package org.web.core.processors;
 import com.sun.net.httpserver.HttpExchange;
 import org.tools.annotations.AnnotationTools;
 import org.tools.Log;
+import org.tools.exceptions.FrameworkException;
 import org.web.annotations.methods.*;
 import org.web.core.ControllerConfig;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.security.Principal;
 import java.util.Set;
@@ -22,7 +26,13 @@ public class ControllerConfigImpl implements ControllerConfig {
 
     static {
         paramInjectableClasses = Stream
-                .of(HttpExchange.class, HttpServletRequest.class, HttpServletResponse.class, Principal.class, HttpSession.class)
+                .of(    HttpExchange.class,
+                        HttpServletRequest.class,
+                        HttpServletResponse.class,
+                        Principal.class,
+                        HttpSession.class,
+                        Part.class
+                )
                 .collect(Collectors.toSet());
         ROUTE_ANNOTATIONS = Stream
                 .of(Post.class, Get.class, Put.class, Delete.class, Route.class)
@@ -65,7 +75,12 @@ public class ControllerConfigImpl implements ControllerConfig {
      * @param paramType
      * @return
      */
-    public Object getRouteInjectedParamValue(HttpServletRequest request, HttpServletResponse response, Class<?> paramType) {
+    public Object getRouteInjectedParamValue(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Class<?> paramType,
+            String paramName
+    ) {
         if(isInjectableParam(paramType)){
             if(paramType.isAssignableFrom(HttpServletRequest.class))
                 return paramType.cast(request);
@@ -75,6 +90,19 @@ public class ControllerConfigImpl implements ControllerConfig {
                 return paramType.cast(request.getUserPrincipal());
             if(paramType.isAssignableFrom(HttpSession.class))
                 return paramType.cast(request.getSession());
+            if(paramType.isAssignableFrom(Part.class)){
+                try {
+                    if(paramName!=null) {
+                        return paramType.cast(request.getPart(paramName));
+                    }
+                    if (!request.getParts().isEmpty())
+                        return paramType.cast(request.getParts().toArray()[0]);
+                } catch (IOException e) {
+                    throw new FrameworkException(e);
+                } catch (ServletException e) {
+                    throw new FrameworkException(e);
+                }
+            }
         }
         return null;
     }

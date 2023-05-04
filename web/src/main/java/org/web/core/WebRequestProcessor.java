@@ -85,8 +85,7 @@ public class WebRequestProcessor {
         ResponseWrapper responseWrapper;
         String httpMethod = request.getMethod();
         String uri = request.getPathInfo();
-        String handlerKey = httpMethod+":"+uri;
-        RouteHandler routeHandler = getHandlers().getOrDefault(handlerKey, null);
+        RouteHandler routeHandler = pickRouteHandler(request);
         if(routeHandler!=null){
             responseWrapper = executeHandler(request, response, routeHandler);
             response.setStatus(200);
@@ -122,6 +121,36 @@ public class WebRequestProcessor {
         }
     }
 
+    public RouteHandler pickRouteHandler(HttpServletRequest request){
+        String httpMethod = request.getMethod();
+        String uri = request.getPathInfo();
+        RouteHandler foundRouteHandler = null;
+        for (RouteHandler handler: getHandlers().values()) {
+            if(!handler.getMethodHttp().equals(httpMethod))
+                continue;
+            String handlerPath = handler.getRootPath()+handler.getMethodInfo().getPath();
+            String[] handlerPathParts = handlerPath.split("//");
+            String[] requestPathParts = uri.split("//");
+            if(handlerPathParts.length != requestPathParts.length)
+                continue;
+            boolean pathsFits = true;
+            for(int i=0; i<handlerPathParts.length; i++){
+                if(
+                        (handlerPathParts[i].startsWith("{") && requestPathParts[i].isEmpty()) ||
+                        (!handlerPathParts[i].startsWith("{") && !handlerPathParts[i].equals(requestPathParts[i]))
+                ){
+                    pathsFits = false;
+                    break;
+                }
+            }
+            if(pathsFits){
+                foundRouteHandler = handler;
+                break;
+            }
+        }
+        return foundRouteHandler;
+    }
+
     /**
      * Prepare parameters,
      * validate values,
@@ -141,10 +170,11 @@ public class WebRequestProcessor {
         String requestPath = routeHandler.getRootPath();
         MethodInfo methodInfo = routeHandler.getMethodInfo();
         Set<ParamInfo> paramInfo = methodInfo.getParamInfoSet();
+        String handlerPath = routeHandler.getRootPath()+methodInfo.getPath();
         // method params
         logger.debugF("Method parameters info: %s \n",paramInfo);
         // extract parameters values
-        Map<String, Object> parameters = extractParametersRawValues(request, response, paramInfo);
+        Map<String, Object> parameters = extractParametersRawValues(request, response, paramInfo, handlerPath);
         logger.debugF("Request parameters raw values: %s \n",parameters);
         // validate parameters
         boolean isParamsOk = validateParameters(parameters, paramInfo);
@@ -249,10 +279,10 @@ public class WebRequestProcessor {
      * @return
      * @throws IOException
      */
-    private static Map<String, Object> extractParametersRawValues(HttpServletRequest request, HttpServletResponse response, Set<ParamInfo> paramsInfo) throws IOException {
+    private static Map<String, Object> extractParametersRawValues(HttpServletRequest request, HttpServletResponse response, Set<ParamInfo> paramsInfo, String handlerPath) throws IOException {
         Map<String, Object> bodyParams = getBodyParams(request);
         Map<String, Object> queryParams = getQueryParams(request);
-        Map<String, Object> pathParams = getPathParams(request);
+        Map<String, Object> pathParams = getPathParams(request, handlerPath);
         Map<String, Object> headerParams = getHeaderParams(request);
         // prepare params
         Map<String, Object> neededParams = new HashMap<>();
@@ -263,7 +293,7 @@ public class WebRequestProcessor {
             paramUsedName = methodParamInfo.getUsedName(); // name or used name in annotation
             paramValue = WebConfig
                     .getControllerConfig()
-                    .getRouteInjectedParamValue(request, response, methodParamInfo.getType());
+                    .getRouteInjectedParamValue(request, response, methodParamInfo.getType(), paramName);
             if(ParamSrc.PATH.equals(methodParamInfo.getParamType())){
                 paramValue = pathParams.get(paramUsedName);
             }else if(ParamSrc.QUERY.equals(methodParamInfo.getParamType())){
@@ -312,10 +342,21 @@ public class WebRequestProcessor {
         return headerParams;
     }
 
-    private static Map<String, Object> getPathParams(HttpServletRequest request){
+    private static Map<String, Object> getPathParams(HttpServletRequest request, String handlerPath){
         Map<String, Object> pathParams = new HashMap<>();
-        // get path params (FIXME to see later)
-        //parseQuery(requestedUri.getRawQuery(), pathParams);
+        String[] handlerPathParts = handlerPath.split("//");
+        String[] requestPathParts = request.getPathInfo().split("//");
+        if(handlerPathParts.length != requestPathParts.length)
+            return pathParams;
+        for(int i=0; i<handlerPathParts.length; i++){
+            if(handlerPathParts[i].startsWith("{")){
+                String paramName = handlerPathParts[i]
+                        .replace("{","")
+                        .replace("}","");
+                String paramValue = requestPathParts[i];
+                pathParams.put(paramName, paramValue);
+            }
+        }
         return pathParams;
     }
 
