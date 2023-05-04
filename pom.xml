@@ -5,15 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.frame</groupId>
-    <artifactId>Frame</artifactId>
+    <artifactId>miniframe</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>Tools</module>
-        <module>Demo</module>
-        <module>Injection</module>
-        <module>Web</module>
-        <module>Agent</module>
+        <module>tools</module>
+        <module>demo</module>
+        <module>injection</module>
+        <module>web</module>
+        <module>agent</module>
     </modules>
 
     <properties>
@@ -38,6 +38,13 @@
         <web.version>1.0-SNAPSHOT</web.version>
 
     </properties>
+    <distributionManagement>
+        <repository>
+            <id>github-mini-frame</id>
+            <name>GitHub younesBouKa Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/younesbouka/MiniFrame</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <plugins>
