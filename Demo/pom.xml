@@ -81,5 +81,6 @@
                 </executions>
             </plugin>
         </plugins>
+        <finalName>${artifactId}-${version}</finalName>
     </build>
 </project>
