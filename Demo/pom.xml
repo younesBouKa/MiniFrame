@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.frame</groupId>
-        <artifactId>Frame</artifactId>
+        <artifactId>miniframe</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>Demo</artifactId>
+    <artifactId>demo</artifactId>
     <packaging>jar</packaging>
 
     <properties>
@@ -18,13 +18,13 @@
     <dependencies>
         <dependency>
             <groupId>org.frame</groupId>
-            <artifactId>Injection</artifactId>
+            <artifactId>injection</artifactId>
             <version>${injection.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.frame</groupId>
-            <artifactId>Web</artifactId>
+            <artifactId>web</artifactId>
             <version>${web.version}</version>
             <scope>compile</scope>
         </dependency>
@@ -81,5 +81,6 @@
                 </executions>
             </plugin>
         </plugins>
+        <finalName>${artifactId}-${version}</finalName>
     </build>
 </project>

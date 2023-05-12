@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.frame</groupId>
-        <artifactId>Frame</artifactId>
+        <artifactId>miniframe</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>Tools</artifactId>
+    <artifactId>tools</artifactId>
     <packaging>jar</packaging>
 
     <properties>
@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>org.frame</groupId>
-            <artifactId>Agent</artifactId>
+            <artifactId>agent</artifactId>
             <version>${agent.version}</version>
             <!-- <scope>system</scope>
               <systemPath>${project.basedir}/libs/agent.jar</systemPath>-->
@@ -105,6 +105,8 @@
                 </executions>
             </plugin>
         </plugins>-->
+
+        <finalName>${artifactId}-${version}</finalName>
     </build>
 
 </project>
