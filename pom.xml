@@ -38,6 +38,17 @@
         <web.version>1.0-SNAPSHOT</web.version>
 
     </properties>
+
+    <repositories>
+        <repository>
+            <id>github-repo</id>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <url>https://raw.githubusercontent.com/younesBouKa/MiniFrame/repository/mvn-repo</url>
+        </repository>
+    </repositories>
+
     <distributionManagement>
         <repository>
             <id>github-mini-frame</id>
