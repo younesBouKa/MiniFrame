@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>org.frame</groupId>
-            <artifactId>Agent</artifactId>
+            <artifactId>agent</artifactId>
             <version>${agent.version}</version>
             <!-- <scope>system</scope>
               <systemPath>${project.basedir}/libs/agent.jar</systemPath>-->
