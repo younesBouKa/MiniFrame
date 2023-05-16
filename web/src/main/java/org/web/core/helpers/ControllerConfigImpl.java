@@ -1,4 +1,4 @@
-package org.web.core.processors;
+package org.web.core.helpers;
 
 import com.sun.net.httpserver.HttpExchange;
 import org.tools.annotations.AnnotationTools;

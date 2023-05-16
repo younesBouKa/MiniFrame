@@ -2,7 +2,8 @@ package org.web;
 
 import org.tools.ClassFinder;
 import org.tools.Log;
-import org.web.core.WebRequestProcessor;
+import org.web.core.HttpRequestProcessor;
+import org.web.core.processors.HttpRequestProcessorImpl;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -22,7 +23,7 @@ import static org.web.Constants.*;
 
 public class WebDispatcher extends HttpServlet {
     private static final Log logger = Log.getInstance(WebDispatcher.class);
-    private WebRequestProcessor webRequestProcessor;
+    private HttpRequestProcessor httpRequestProcessor;
     private WebContext webContext;
 
     public void init() throws ServletException {
@@ -47,7 +48,7 @@ public class WebDispatcher extends HttpServlet {
         ctx.setAttribute(WEB_CONTEXT, webContext);
         ctx.setAttribute(INJECTION_CONFIG, webContext.getInjectionConfig());
         // init Web request processor with web context
-        webRequestProcessor = new WebRequestProcessor(webContext);
+        httpRequestProcessor = new HttpRequestProcessorImpl(webContext);
         super.init();
     }
 
@@ -74,7 +75,7 @@ public class WebDispatcher extends HttpServlet {
     public void callHandler(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         logger.info("New request received, RequestURI: "+req.getRequestURI());
         updateRequestAttribute(req);
-        webRequestProcessor.call(req, resp);
+        httpRequestProcessor.processRequest(req, resp);
     }
 
     @Override
