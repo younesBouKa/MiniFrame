@@ -3,6 +3,7 @@ package org.injection;
 import org.injection.core.providers.BeanProvider;
 import org.injection.core.data.ScopeInstance;
 import org.injection.core.providers.BeanProviderImpl;
+import org.tools.proxy.ProxyHandler;
 import org.tools.Log;
 
 import java.lang.annotation.Annotation;
@@ -34,6 +35,16 @@ public class DefaultProvider implements BeanProvider{
 
     @Override
     public <T> T getBeanInstance(Class<T> beanType, Set<Annotation> qualifiers, Set<ScopeInstance> scopes, Class<?> beanScopeType) {
-        return beanProvider.getBeanInstance(beanType, qualifiers, scopes, beanScopeType);
+        Object bean = beanProvider.getBeanInstance(beanType, qualifiers, scopes, beanScopeType);
+        Object beanProxy = ProxyHandler.newInstance(
+                bean,
+                (proxy, method, args)-> {
+                    logger.info("Before calling bean method: "+method.getName());
+                },
+                ((proxy, method, args, returnVal) -> {
+                    logger.info("After calling bean method: "+method.getName());
+                })
+        );
+        return beanType.cast(bean);
     }
 }

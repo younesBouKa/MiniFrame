@@ -3,6 +3,7 @@ package org.web;
 import org.injection.core.data.ScopeInstance;
 import org.injection.core.providers.BeanProvider;
 import org.tools.Log;
+import org.tools.proxy.ProxyHandler;
 import org.web.annotations.scopes.RequestScope;
 import org.web.annotations.scopes.SessionScope;
 
@@ -62,6 +63,16 @@ public class WebProvider implements BeanProvider{
         if(getSession()!=null){
             scopes.add(new ScopeInstance(SessionScope.class, getSession()));
         }
-        return beanProvider.getBeanInstance(beanType, qualifiers, scopes, beanScopeType);
+        Object bean = beanProvider.getBeanInstance(beanType, qualifiers, scopes, beanScopeType);
+        Object beanProxy = ProxyHandler.newInstance(
+                bean,
+                (proxy, method, args)-> {
+                    logger.info("Before calling bean method: "+method.getName());
+                },
+                ((proxy, method, args, returnVal) -> {
+                    logger.info("After calling bean method: "+method.getName());
+                })
+        );
+        return beanType.cast(bean);
     }
 }

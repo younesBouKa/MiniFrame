@@ -1,4 +1,4 @@
-package org.injection.proxy;
+package org.tools.proxy;
 
 import java.lang.reflect.Method;
 
