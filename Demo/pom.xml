@@ -28,6 +28,12 @@
             <version>${web.version}</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.frame</groupId>
+            <artifactId>aspect</artifactId>
+            <version>${aspect.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

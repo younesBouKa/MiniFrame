@@ -1,10 +1,13 @@
 package org.demo;
 
 import com.sun.net.httpserver.HttpHandler;
+import org.aspect.agent.Loader;
+import org.aspect.proxy.Wrapper;
 import org.demo.Server.Server;
 import org.demo.dao.UserDAO;
 import org.demo.services.ProductService;
 import org.demo.services.UserService;
+import org.demo.services.impls.UserServiceImpl;
 import org.injection.DefaultProvider;
 import org.injection.InjectionConfig;
 import org.injection.annotations.AlternativeConfig;
@@ -49,11 +52,14 @@ public class Launcher {
         //testCustomQualifierManager();
         //testTools();
         //testAnnotationTools();
-        testDI();
+        testJDKProxyAspect();
+        testCglibProxyAspect();
+        //testAgentAspect();
+        //testDI();
         //ClassFinder.addToClassPath(Collections.singleton("path."+System.currentTimeMillis()+".jar"));
         //System.out.println(WebConfig.getControllerProcessor().getRouteHandlers());
-        testWeb();
-        testBeanResolver();
+        //testWeb();
+        //testBeanResolver();
         //testProxy();
         //testDebugger();
         //testBuildAgent();
@@ -94,7 +100,7 @@ public class Launcher {
         AgentLoader.buildAndAttachAgent(
                 Launcher.class.getCanonicalName(),
                 "org.agent",
-                "org.agent.Agent",
+                "org.agent.AgentMain",
                 options
                 );
     }
@@ -105,7 +111,7 @@ public class Launcher {
         options.put("cnfr", "(org\\.demo\\.).*"); // class name filter regex
         AgentLoader.searchAndAttachAgent(
                 Launcher.class.getCanonicalName(),
-                "org.agent.Agent",
+                "org.agent.AgentMain",
                 options
         );
     }
@@ -143,6 +149,29 @@ public class Launcher {
         UserService userServiceWithBeanProvider = defaultBeanProvider
                 .getBeanInstance(UserService.class);
         logger.debug(userServiceWithBeanProvider.login(userDAO.getId()));
+    }
+
+    public static void testAgentAspect(){
+        Loader.init();
+    }
+
+    public static void testJDKProxyAspect(){
+        BeanProvider defaultBeanProvider = DefaultProvider.init();
+        UserService userService = defaultBeanProvider.getBeanInstance(UserService.class);
+        UserService wrappedUserService = (UserService) Wrapper.wrap(userService);
+        logger.debug("testProxyAspect: "+wrappedUserService.hashCode());
+        logger.debug("testProxyAspect: "+wrappedUserService.login("toto"));
+    }
+
+    public static void testCglibProxyAspect(){
+        class Toto{
+            public String titi(){
+                return "titi";
+            }
+        }
+        Toto toto = new Toto();
+        Toto wrappedToto = (Toto)Wrapper.wrap(toto);
+        logger.debug("testCglibProxyAspect: "+wrappedToto.titi());
     }
 
     public static void testWeb() throws Exception {
