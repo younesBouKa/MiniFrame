@@ -15,9 +15,15 @@
 
     <properties>
         <cglib-version>3.3.0</cglib-version>
+        <byte-buddy-version>LATEST</byte-buddy-version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${byte-buddy-version}</version>
+        </dependency>
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>

@@ -2,6 +2,7 @@ org\tools\exceptions\FrameworkException.class
 org\tools\agent\AgentMethodName.class
 org\tools\annotations\AnnotationTree.class
 org\tools\others\Cell.class
+org\tools\XmlParser.class
 org\tools\annotations\AnnotationTools.class
 org\tools\agent\AgentConfig.class
 org\tools\ClassFinder.class
