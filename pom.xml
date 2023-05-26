@@ -14,7 +14,6 @@
         <module>injection</module>
         <module>web</module>
         <module>agent</module>
-        <module>transaction</module>
         <module>Aspect</module>
     </modules>
 
