@@ -2,55 +2,42 @@ package org.aspect.processor;
 
 import org.aspect.annotations.advices.*;
 import org.aspect.scanners.AspectScanManager;
-import org.aspect.scanners.AspectScanManagerImpl;
 import org.tools.Log;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class AspectProcessorImpl implements AspectProcessor{
     private static final Log logger = Log.getInstance(AspectProcessorImpl.class);
-    private static final AspectScanManager aspectScanManager = new AspectScanManagerImpl();
+    private AspectScanManager aspectScanManager;
 
-    public Object getAspectInstance(Class aspectClass){
-        Constructor[] constructors = aspectClass.getConstructors();
-        Constructor constructor = constructors[0];
-        try {
-            return constructor.newInstance(null);
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
+    public AspectProcessorImpl(AspectScanManager aspectScanManager){
+        this.aspectScanManager = aspectScanManager;
+    }
+
+    @Override
+    public AspectScanManager getAspectScanManager() {
+        return aspectScanManager;
+    }
+
+    @Override
+    public void setAspectScanManager(AspectScanManager aspectScanManager) {
+        this.aspectScanManager = aspectScanManager;
     }
 
     public void execBeforeCallAdvice(Object targetInstance, Method method, Object[] args){
         // get matching advices
-        Map<Annotation, Method> advices = aspectScanManager.getAdvices(method, BeforeCall.class);
-        List<Annotation> sortedAdviceAnnotations = advices.keySet()
-                .stream()
-                .sorted((anno1, anno2)-> {
-                    int ord1 = ((BeforeCall) anno1).order(),
-                            ord2 = ((BeforeCall) anno2).order();
-                    return Integer.compare(ord1, ord2);
-                })
-                .collect(Collectors.toList());
+        List<Method> sortedAdvices = aspectScanManager.getSortedAdvices(method, BeforeCall.class);
         // call advice method
-        for(Annotation adviceAnnotation : sortedAdviceAnnotations){
-            Method adviceMethod = advices.get(adviceAnnotation);
+        for(Method adviceMethod : sortedAdvices){
             try {
                 // get aspect class instance
                 Object aspectInstance = null;
                 if(!Modifier.isStatic(adviceMethod.getModifiers()))
                     aspectInstance = getAspectInstance(adviceMethod.getDeclaringClass());
+                adviceMethod.setAccessible(true);
                 adviceMethod.invoke(aspectInstance, method, args, targetInstance);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
@@ -66,23 +53,15 @@ public class AspectProcessorImpl implements AspectProcessor{
 
     public Object execBeforeReturnAdvice(Object targetInstance, Method method, Object[] args, Object returnVal){
         // get matching advices
-        Map<Annotation, Method> advices = aspectScanManager.getAdvices(method, BeforeReturn.class);
-        List<Annotation> sortedAdviceAnnotations = advices.keySet()
-                .stream()
-                .sorted((anno1, anno2)-> {
-                    int ord1 = ((BeforeReturn) anno1).order(),
-                            ord2 = ((BeforeReturn) anno2).order();
-                    return Integer.compare(ord1, ord2);
-                })
-                .collect(Collectors.toList());
+        List<Method> sortedAdvices = aspectScanManager.getSortedAdvices(method, BeforeReturn.class);
         // call advice method
-        for(Annotation adviceAnnotation : sortedAdviceAnnotations){
-            Method adviceMethod = advices.get(adviceAnnotation);
+        for(Method adviceMethod : sortedAdvices){
             try {
                 // get aspect class instance
                 Object aspectInstance = null;
                 if(!Modifier.isStatic(adviceMethod.getModifiers()))
                     aspectInstance = getAspectInstance(adviceMethod.getDeclaringClass());
+                adviceMethod.setAccessible(true);
                 returnVal = adviceMethod.invoke(aspectInstance, method, args, targetInstance, returnVal);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
@@ -100,23 +79,15 @@ public class AspectProcessorImpl implements AspectProcessor{
 
     public void execAfterCallAdvice(Object targetInstance, Method method, Object[] args, Object returnVal){
         // get matching advices
-        Map<Annotation, Method> advices = aspectScanManager.getAdvices(method, AfterCall.class);
-        List<Annotation> sortedAdviceAnnotations = advices.keySet()
-                .stream()
-                .sorted((anno1, anno2)-> {
-                    int ord1 = ((AfterCall) anno1).order(),
-                            ord2 = ((AfterCall) anno2).order();
-                    return Integer.compare(ord1, ord2);
-                })
-                .collect(Collectors.toList());
+        List<Method> sortedAdvices = aspectScanManager.getSortedAdvices(method, AfterCall.class);
         // call advice method
-        for(Annotation adviceAnnotation : sortedAdviceAnnotations){
-            Method adviceMethod = advices.get(adviceAnnotation);
+        for(Method adviceMethod : sortedAdvices){
             try {
                 // get aspect class instance
                 Object aspectInstance = null;
                 if(!Modifier.isStatic(adviceMethod.getModifiers()))
                     aspectInstance = getAspectInstance(adviceMethod.getDeclaringClass());
+                adviceMethod.setAccessible(true);
                 adviceMethod.invoke(aspectInstance, method, args, targetInstance, returnVal);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
@@ -133,23 +104,15 @@ public class AspectProcessorImpl implements AspectProcessor{
 
     public void execAroundCallAdvice(Object targetInstance, Method method, Object[] args){
         // get matching advices
-        Map<Annotation, Method> advices = aspectScanManager.getAdvices(method, AroundCall.class);
-        List<Annotation> sortedAdviceAnnotations = advices.keySet()
-                .stream()
-                .sorted((anno1, anno2)-> {
-                    int ord1 = ((AroundCall) anno1).order(),
-                            ord2 = ((AroundCall) anno2).order();
-                    return Integer.compare(ord1, ord2);
-                })
-                .collect(Collectors.toList());
+        List<Method> sortedAdvices = aspectScanManager.getSortedAdvices(method, AroundCall.class);
         // call advice method
-        for(Annotation adviceAnnotation : sortedAdviceAnnotations){
-            Method adviceMethod = advices.get(adviceAnnotation);
+        for(Method adviceMethod : sortedAdvices){
             try {
                 // get aspect class instance
                 Object aspectInstance = null;
                 if(!Modifier.isStatic(adviceMethod.getModifiers()))
                     aspectInstance = getAspectInstance(adviceMethod.getDeclaringClass());
+                adviceMethod.setAccessible(true);
                 adviceMethod.invoke(aspectInstance, method, args, targetInstance);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
@@ -165,23 +128,15 @@ public class AspectProcessorImpl implements AspectProcessor{
 
     public void execOnExceptionAdvice(Object targetInstance, Method method, Object[] args, Throwable throwable){
         // get matching advices
-        Map<Annotation, Method> advices = aspectScanManager.getAdvices(method, OnException.class);
-        List<Annotation> sortedAdviceAnnotations = advices.keySet()
-                .stream()
-                .sorted((anno1, anno2)-> {
-                    int ord1 = ((OnException) anno1).order(),
-                            ord2 = ((OnException) anno2).order();
-                    return Integer.compare(ord1, ord2);
-                })
-                .collect(Collectors.toList());
+        List<Method> sortedAdvices = aspectScanManager.getSortedAdvices(method, OnException.class);
         // call advice method
-        for(Annotation adviceAnnotation : sortedAdviceAnnotations){
-            Method adviceMethod = advices.get(adviceAnnotation);
+        for(Method adviceMethod : sortedAdvices){
             try {
                 // get aspect class instance
                 Object aspectInstance = null;
                 if(!Modifier.isStatic(adviceMethod.getModifiers()))
                     aspectInstance = getAspectInstance(adviceMethod.getDeclaringClass());
+                adviceMethod.setAccessible(true);
                 adviceMethod.invoke(aspectInstance, method, args, targetInstance, throwable);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);

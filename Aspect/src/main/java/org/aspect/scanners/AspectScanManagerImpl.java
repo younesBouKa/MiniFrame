@@ -1,9 +1,7 @@
 package org.aspect.scanners;
 
-import org.aspect.annotations.AdviceMarker;
 import org.tools.ClassFinder;
 import org.tools.Log;
-import org.tools.annotations.AnnotationTools;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -32,16 +30,11 @@ public class AspectScanManagerImpl implements AspectScanManager {
         }
         return advices;
     }
-    public void addAdviceMethod(Method method){
-        for(Annotation annotation : method.getAnnotations()){
-            addAdviceMethod(method, annotation);
-        }
-    }
     public void addAdviceMethod(Method method, Annotation adviceAnnotation){
-        Class<? extends Annotation> annotationType = adviceAnnotation.annotationType();
-        boolean isAdviceAnnotation = AnnotationTools.isAnnotationPresent(annotationType, AdviceMarker.class);
-        if(isAdviceAnnotation)
+        if(isValidAdviceAnnotation(adviceAnnotation))
             adviceCache.put(adviceAnnotation, method);
+        else
+            logger.warn("Annotation "+adviceAnnotation+" is not a valid advice annotation");
     }
     /*---------------------- inner methods --------------------------*/
     public void update(boolean force){
@@ -56,7 +49,6 @@ public class AspectScanManagerImpl implements AspectScanManager {
                 logger.error("No advice was found.");
         }
     }
-
     private void scanForAdvices(){
         logger.debug("Scanning for advices ... ");
         ClassFinder.getClassesWithFilter(this::isValidAspect)

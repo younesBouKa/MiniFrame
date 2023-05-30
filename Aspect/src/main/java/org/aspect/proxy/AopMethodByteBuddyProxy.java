@@ -5,16 +5,17 @@ import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bind.annotation.*;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.aspect.processor.AspectProcessor;
-import org.aspect.processor.AspectProcessorImpl;
 import org.tools.Log;
 
 import java.lang.reflect.Method;
 
 public class AopMethodByteBuddyProxy<T> {
     private static final Log logger = Log.getInstance(AopMethodByteBuddyProxy.class);
-    private static AspectProcessor aspectProcessor = new AspectProcessorImpl();
+    private static AspectProcessor aspectProcessor;
 
     public static Object newInstance(Object instance) {
+        if(aspectProcessor==null)
+            throw new RuntimeException("No aspect processor is defined");
         Class<?> instanceClass = instance.getClass();
         Class<?> dynamicProxyClass = new ByteBuddy()
                 .subclass(Object.class)
@@ -41,6 +42,7 @@ public class AopMethodByteBuddyProxy<T> {
         aspectProcessor.execBeforeCallAdvice(instance, method, args);
         aspectProcessor.execAroundCallAdvice(instance, method, args);
         try {
+            method.setAccessible(true);
             result = method.invoke(instance, args);
         } catch (Throwable throwable) {
             aspectProcessor.execOnExceptionAdvice(instance, method, args, throwable);

@@ -7,15 +7,14 @@ import org.demo.Server.Server;
 import org.demo.dao.UserDAO;
 import org.demo.services.ProductService;
 import org.demo.services.UserService;
-import org.demo.services.impls.UserServiceImpl;
 import org.injection.DefaultProvider;
 import org.injection.InjectionConfig;
 import org.injection.annotations.AlternativeConfig;
 import org.injection.annotations.BeanScanPackages;
 import org.injection.annotations.Component;
-import org.injection.core.providers.BeanProvider;
 import org.injection.core.data.AlternativeInstance;
 import org.injection.core.data.ScopeInstance;
+import org.injection.core.providers.BeanProvider;
 import org.injection.core.providers.BeanResolverImpl;
 import org.injection.others.DebuggerInstance;
 import org.injection.others.TestBean;
@@ -158,7 +157,7 @@ public class Launcher {
     public static void testJDKProxyAspect(){
         BeanProvider defaultBeanProvider = DefaultProvider.init();
         UserService userService = defaultBeanProvider.getBeanInstance(UserService.class);
-        UserService wrappedUserService = (UserService) Wrapper.wrap(userService);
+        UserService wrappedUserService = (UserService) Wrapper.init().wrap(userService);
         logger.debug("testProxyAspect: "+wrappedUserService.hashCode());
         logger.debug("testProxyAspect: "+wrappedUserService.login("toto"));
     }
@@ -170,7 +169,7 @@ public class Launcher {
             }
         }
         Toto toto = new Toto();
-        Toto wrappedToto = (Toto)Wrapper.wrap(toto);
+        Toto wrappedToto = (Toto)Wrapper.init().wrap(toto);
         logger.debug("testCglibProxyAspect: "+wrappedToto.titi());
     }
 

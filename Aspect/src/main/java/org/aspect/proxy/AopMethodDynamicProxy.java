@@ -1,7 +1,6 @@
 package org.aspect.proxy;
 
 import org.aspect.processor.AspectProcessor;
-import org.aspect.processor.AspectProcessorImpl;
 import org.tools.Log;
 
 import java.lang.reflect.InvocationHandler;
@@ -9,7 +8,7 @@ import java.lang.reflect.Method;
 
 public class AopMethodDynamicProxy<T> implements InvocationHandler {
     private static final Log logger = Log.getInstance(AopMethodDynamicProxy.class);
-    private static AspectProcessor aspectProcessor = new AspectProcessorImpl();
+    private static AspectProcessor aspectProcessor;
     private final Object instance;
 
     private AopMethodDynamicProxy(Object instance) {
@@ -17,6 +16,8 @@ public class AopMethodDynamicProxy<T> implements InvocationHandler {
     }
 
     public static Object newInstance(Object instance) {
+        if(aspectProcessor==null)
+            throw new RuntimeException("No aspect processor is defined");
         return java.lang.reflect.Proxy.newProxyInstance(
                 instance.getClass().getClassLoader(),
                 instance.getClass().getInterfaces(),
@@ -29,6 +30,7 @@ public class AopMethodDynamicProxy<T> implements InvocationHandler {
         aspectProcessor.execBeforeCallAdvice(instance, method, args);
         aspectProcessor.execAroundCallAdvice(instance, method, args);
         try {
+            method.setAccessible(true);
             result = method.invoke(instance, args);
         } catch (Throwable throwable) {
             aspectProcessor.execOnExceptionAdvice(instance, method, args, throwable);

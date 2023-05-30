@@ -1,6 +1,7 @@
 package org.demo.aspects;
 
 import org.aspect.annotations.Aspect;
+import org.aspect.annotations.InitAspect;
 import org.aspect.annotations.advices.AfterCall;
 import org.aspect.annotations.advices.BeforeCall;
 import org.aspect.annotations.advices.BeforeReturn;
@@ -12,6 +13,11 @@ import java.lang.reflect.Method;
 @Aspect
 public class UserServiceAspect {
     private static final Log logger = Log.getInstance(UserServiceAspect.class);
+
+    @InitAspect
+    private void init(){
+        logger.info("Init aspect instance");
+    }
 
     @BeforeCall(methodSignature = "(.*)hashCode(.*)")
     public void hashCodeAdvice(Method method, Object[] args, Object targetInstance){

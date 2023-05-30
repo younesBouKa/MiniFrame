@@ -4,14 +4,13 @@ import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import org.aspect.processor.AspectProcessor;
-import org.aspect.processor.AspectProcessorImpl;
 import org.tools.Log;
 
 import java.lang.reflect.Method;
 
 public class AopMethodCglibProxy<T> implements MethodInterceptor {
     private static final Log logger = Log.getInstance(AopMethodCglibProxy.class);
-    private static AspectProcessor aspectProcessor = new AspectProcessorImpl();
+    private static AspectProcessor aspectProcessor;
     private final Object instance;
 
     private AopMethodCglibProxy(Object instance) {
@@ -19,6 +18,8 @@ public class AopMethodCglibProxy<T> implements MethodInterceptor {
     }
 
     public static Object newInstance(Object instance) {
+        if(aspectProcessor==null)
+            throw new RuntimeException("No aspect processor is defined");
         return Enhancer.create(instance.getClass(), new AopMethodCglibProxy<>(instance));
     }
 
