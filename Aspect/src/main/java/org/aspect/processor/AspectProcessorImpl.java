@@ -27,6 +27,54 @@ public class AspectProcessorImpl implements AspectProcessor{
         this.aspectScanManager = aspectScanManager;
     }
 
+    public void execTargetClassAdvice(Object targetInstance, Method method, Object[] args){
+        // get matching advices
+        List<Method> sortedAdvices = aspectScanManager.getSortedAdvices(method, BeforeCall.class);
+        // call advice method
+        for(Method adviceMethod : sortedAdvices){
+            try {
+                // get aspect class instance
+                Object aspectInstance = null;
+                if(!Modifier.isStatic(adviceMethod.getModifiers()))
+                    aspectInstance = getAspectInstance(adviceMethod.getDeclaringClass());
+                adviceMethod.setAccessible(true);
+                adviceMethod.invoke(aspectInstance, method, args, targetInstance);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            } catch (IllegalArgumentException e){
+                logger.error("Advice method "+adviceMethod.toGenericString()+" must accept 3 arguments \n (" +
+                        "java.lang.reflect.Method targetMethod, " +
+                        "java.lang.reflect.Object[] args, " +
+                        "java.lang.reflect.Object currentInstance" +
+                        ")");
+            }
+        }
+    }
+
+    public void execAnnotatedWithAdvice(Object targetInstance, Method method, Object[] args){
+        // get matching advices
+        List<Method> sortedAdvices = aspectScanManager.getSortedAdvices(method, BeforeCall.class);
+        // call advice method
+        for(Method adviceMethod : sortedAdvices){
+            try {
+                // get aspect class instance
+                Object aspectInstance = null;
+                if(!Modifier.isStatic(adviceMethod.getModifiers()))
+                    aspectInstance = getAspectInstance(adviceMethod.getDeclaringClass());
+                adviceMethod.setAccessible(true);
+                adviceMethod.invoke(aspectInstance, method, args, targetInstance);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            } catch (IllegalArgumentException e){
+                logger.error("Advice method "+adviceMethod.toGenericString()+" must accept 3 arguments \n (" +
+                        "java.lang.reflect.Method targetMethod, " +
+                        "java.lang.reflect.Object[] args, " +
+                        "java.lang.reflect.Object currentInstance" +
+                        ")");
+            }
+        }
+    }
+
     public void execBeforeCallAdvice(Object targetInstance, Method method, Object[] args){
         // get matching advices
         List<Method> sortedAdvices = aspectScanManager.getSortedAdvices(method, BeforeCall.class);

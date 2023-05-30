@@ -2,10 +2,8 @@ package org.demo.aspects;
 
 import org.aspect.annotations.Aspect;
 import org.aspect.annotations.InitAspect;
-import org.aspect.annotations.advices.AfterCall;
-import org.aspect.annotations.advices.BeforeCall;
-import org.aspect.annotations.advices.BeforeReturn;
-import org.aspect.annotations.advices.OnException;
+import org.aspect.annotations.advices.*;
+import org.demo.services.UserService;
 import org.tools.Log;
 
 import java.lang.reflect.Method;
@@ -48,5 +46,10 @@ public class UserServiceAspect {
     @BeforeCall(methodSignature = "(.*)titi(.*)")
     public void beforeCallTitiAdvice(Method method, Object[] args, Object targetInstance){
         logger.info("BeforeCall : beforeCallTitiAdvice : "+method.getName()+" : "+ targetInstance);
+    }
+
+    @TargetClass(target= UserService.class)
+    public void targetClassAdvice(Method method, Object[] args, Object targetInstance){
+        logger.info("TargetClass : targetClassAdvice : "+method.getName()+" : "+ targetInstance);
     }
 }

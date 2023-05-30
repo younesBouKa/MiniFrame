@@ -7,6 +7,7 @@ import org.aspect.processor.AspectProcessor;
 import org.tools.Log;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 public class AopMethodCglibProxy<T> implements MethodInterceptor {
     private static final Log logger = Log.getInstance(AopMethodCglibProxy.class);
@@ -25,6 +26,8 @@ public class AopMethodCglibProxy<T> implements MethodInterceptor {
 
     @Override
     public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        if(Modifier.isPrivate(method.getModifiers()) || Modifier.isFinal(method.getModifiers()))
+            throw new RuntimeException("Method "+method.toGenericString()+" wrapped with a CGLIB proxy can't be private or final");
         Object result;
         aspectProcessor.execBeforeCallAdvice(o, method, args);
         aspectProcessor.execAroundCallAdvice(o, method, args);

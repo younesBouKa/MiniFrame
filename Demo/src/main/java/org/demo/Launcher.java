@@ -163,14 +163,10 @@ public class Launcher {
     }
 
     public static void testCglibProxyAspect(){
-        class Toto{
-            public String titi(){
-                return "titi";
-            }
-        }
         Toto toto = new Toto();
         Toto wrappedToto = (Toto)Wrapper.init().wrap(toto);
         logger.debug("testCglibProxyAspect: "+wrappedToto.titi());
+        logger.debug("testCglibProxyAspect: "+ Toto.tata());
     }
 
     public static void testWeb() throws Exception {
@@ -263,5 +259,13 @@ public class Launcher {
         System.out.println("Bean: "+bean);
     }
 }
-
+class Toto{
+    public String titi(){
+        return "titi";
+    }
+    public static String tata(){
+        System.out.println("tata");
+        return "tata";
+    }
+}
 

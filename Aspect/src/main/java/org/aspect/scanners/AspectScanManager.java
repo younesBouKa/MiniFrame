@@ -32,29 +32,38 @@ public interface AspectScanManager {
     }
     default boolean doesPointCutMatch(Method targetMethod, Annotation adviceAnnotation){
         String methodSignature = formatMethodSignature(targetMethod);
-        String pointCutExpression = null;
+        Class<?> targetMethodClass = targetMethod.getDeclaringClass();
         if(adviceAnnotation instanceof AroundCall){
             AroundCall adviceAnn = (AroundCall) adviceAnnotation;
-            pointCutExpression = adviceAnn.methodSignature();
+            return methodSignature.matches(adviceAnn.methodSignature());
         }
         if(adviceAnnotation instanceof BeforeCall){
             BeforeCall adviceAnn = (BeforeCall) adviceAnnotation;
-            pointCutExpression = adviceAnn.methodSignature();
+            return methodSignature.matches(adviceAnn.methodSignature());
         }
         if(adviceAnnotation instanceof AfterCall){
             AfterCall adviceAnn = (AfterCall) adviceAnnotation;
-            pointCutExpression = adviceAnn.methodSignature();
+            return methodSignature.matches(adviceAnn.methodSignature());
         }
         if(adviceAnnotation instanceof BeforeReturn){
             BeforeReturn adviceAnn = (BeforeReturn) adviceAnnotation;
-            pointCutExpression = adviceAnn.methodSignature();
+            return methodSignature.matches(adviceAnn.methodSignature());
         }
         if(adviceAnnotation instanceof OnException){
             OnException adviceAnn = (OnException) adviceAnnotation;
-            pointCutExpression = adviceAnn.methodSignature();
+            return methodSignature.matches(adviceAnn.methodSignature());
         }
-        return (pointCutExpression!=null && methodSignature.matches(pointCutExpression))
-                ;
+        if(adviceAnnotation instanceof AnnotatedWith){
+            AnnotatedWith adviceAnn = (AnnotatedWith) adviceAnnotation;
+            Class<? extends Annotation> targetAnnotationType = adviceAnn.annotationClass();
+            return AnnotationTools.isAnnotationPresent(targetMethod, targetAnnotationType);
+        }
+        if(adviceAnnotation instanceof TargetClass){
+            TargetClass adviceAnn = (TargetClass) adviceAnnotation;
+            Class<?> pointCutTargetClass= adviceAnn.target();
+            return targetMethodClass.isAssignableFrom(pointCutTargetClass);
+        }
+        return false;
     }
     default String formatMethodSignature(Method targetMethod){
         return  targetMethod.toGenericString();
@@ -84,6 +93,14 @@ public interface AspectScanManager {
         }
         if(adviceAnnotation instanceof OnException){
             OnException adviceAnn = (OnException) adviceAnnotation;
+            return adviceAnn.order();
+        }
+        if(adviceAnnotation instanceof AnnotatedWith){
+            AnnotatedWith adviceAnn = (AnnotatedWith) adviceAnnotation;
+            return adviceAnn.order();
+        }
+        if(adviceAnnotation instanceof TargetClass){
+            TargetClass adviceAnn = (TargetClass) adviceAnnotation;
             return adviceAnn.order();
         }
         return 1;
