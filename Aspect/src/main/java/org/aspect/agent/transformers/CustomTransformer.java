@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public abstract class CustomTransformer implements ClassFileTransformer {
-    protected Set<String> processedClasses = new HashSet<>();
     private final String defaultExcludeRegex = "(com\\.intellij|jdk|org\\.jetbrains).*";
     private String[] classFilterRegexps = new String[]{};
 

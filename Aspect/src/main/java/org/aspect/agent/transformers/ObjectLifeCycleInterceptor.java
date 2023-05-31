@@ -72,7 +72,7 @@ public class ObjectLifeCycleInterceptor extends CustomTransformer {
                 // getting bytes
                 byteCode = ctClass.toBytecode();
                 ctClass.detach();
-                processedClasses.add(normalizedClassName);
+                //processedClasses.add(normalizedClassName);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

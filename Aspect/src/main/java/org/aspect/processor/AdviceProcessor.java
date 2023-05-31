@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public interface AspectProcessor {
+public interface AdviceProcessor {
     Map<Class<?>, Object> aspectInstancesCache = new Hashtable<>();
     default Object getAspectInstance(Class<?> aspectClass){
         // get from cache if exists
@@ -70,11 +70,11 @@ public interface AspectProcessor {
             throw new RuntimeException(e);
         }
     }
-    void setAspectScanManager(AspectScanManager aspectScanManager);
+
     AspectScanManager getAspectScanManager();
-    void execBeforeCallAdvice(Object targetInstance, Method method, Object[] args);
-    Object execBeforeReturnAdvice(Object targetInstance, Method method, Object[] args, Object returnVal);
-    void execAfterCallAdvice(Object targetInstance, Method method, Object[] args, Object returnVal);
-    void execAroundCallAdvice(Object targetInstance, Method method, Object[] args);
-    void execOnExceptionAdvice(Object targetInstance, Method method, Object[] args, Throwable throwable);
+    void setAspectScanManager(AspectScanManager aspectScanManager);
+    void execBeforeCall(Object targetInstance, Method method, Object[] args);
+    void execAfterCall(Object targetInstance, Method method, Object[] args, Object returnVal);
+    Object execBeforeReturn(Object targetInstance, Method method, Object[] args, Object returnVal);
+    void execOnException(Object targetInstance, Method method, Object[] args, Throwable throwable);
 }

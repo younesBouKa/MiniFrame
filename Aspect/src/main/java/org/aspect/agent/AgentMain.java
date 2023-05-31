@@ -2,8 +2,9 @@ package org.aspect.agent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.aspect.agent.transformers.ClassLogger;
+import org.aspect.agent.transformers.AspectWeaverInterceptor;
 import org.aspect.agent.transformers.ObjectLifeCycleInterceptor;
+import org.aspect.scanners.AspectScanManagerImpl;
 
 import java.io.File;
 import java.lang.instrument.Instrumentation;
@@ -137,10 +138,10 @@ public class AgentMain {
             ObjectLifeCycleInterceptor objectLifeCycleInterceptor = new ObjectLifeCycleInterceptor();
             objectLifeCycleInterceptor.setClassFilterRegexps(classFilterRegexps);
             instrumentation.addTransformer(objectLifeCycleInterceptor);
-        }else if(transformerType.equals("logger")){
-            ClassLogger classLogger = new ClassLogger();
-            classLogger.setClassFilterRegexps(classFilterRegexps);
-            instrumentation.addTransformer(classLogger);
+        }else if(transformerType.equals("weaver")){
+            AspectWeaverInterceptor aspectWeaverInterceptor = new AspectWeaverInterceptor(new AspectScanManagerImpl());
+            aspectWeaverInterceptor.setClassFilterRegexps(classFilterRegexps);
+            instrumentation.addTransformer(aspectWeaverInterceptor);
         }else{
             logger.warn("No options was set to define agent transformer choose between types: [lifecycle|logger]");
         }
