@@ -24,10 +24,12 @@ import org.tools.annotations.AnnotationTree;
 import org.web.WebConfig;
 import org.web.annotations.WebScanPackages;
 import org.web.filters.basic.GzipFilter;
+import org.web.server.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Scope;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -46,10 +48,17 @@ public class Launcher {
     public String field;
 
     public static void main(String[] args) throws Exception {
+        testDemoTomcatEmbeddedServer();
         //testCustomQualifierManager();
         //testTools();
         //testAnnotationTools();
         testDI();
+        //testJDKProxyAspect();
+        //testCglibProxyAspect();
+        //testAsmProxyAspect();
+        //testJassProxyAspect();
+        // ------- testAgentAspect();
+        //testDI();
         //ClassFinder.addToClassPath(Collections.singleton("path."+System.currentTimeMillis()+".jar"));
         //System.out.println(WebConfig.getControllerProcessor().getRouteHandlers());
         testWeb();
@@ -60,6 +69,43 @@ public class Launcher {
         //testSearchAgent();
         //testAnnotationTree();
 
+    }
+
+    public static void testDemoTomcatEmbeddedServer(){
+        EmbeddedServerFactory embeddedServerFactory = new TomcatEmbeddedServerFactory();
+        // create server config instance
+        ServerConfig serverConfig = new ServerConfig();
+        serverConfig.setPort(8090);
+        serverConfig.setContextPath("/webapp");
+        serverConfig.setDocBase(new File("Demo/src/main/webapp/").getAbsolutePath());
+        serverConfig.setListenerClasses(TomcatEmbeddedServerFactory.getListenersClasses());
+        // add jsp servlet
+        ServletConfig jspServletConfig = new ServletConfig();
+        jspServletConfig.setServletName("JspServlet");
+        jspServletConfig.setServletClass("org.apache.jasper.servlet.JspServlet");
+        jspServletConfig.setUrlPattern("*.jsp");
+        jspServletConfig.addInitParam("compilerSourceVM", "1.8");
+        jspServletConfig.addInitParam("compilerTargetVM", "1.8");
+        serverConfig.addServletConfig(jspServletConfig);
+        // add static resources servlet
+        ServletConfig staticServletConfig = new ServletConfig();
+        staticServletConfig.setServletName("StaticServlet");
+        staticServletConfig.setServletClass(StaticServlet.class.getCanonicalName());
+        staticServletConfig.setUrlPattern("/static/*");
+        staticServletConfig.addInitParam(StaticServlet.PATH_PREFIX_PARAM_NAME, "/static");
+        staticServletConfig.addInitParam(StaticServlet.STATIC_RESOURCE_FOLDER_PARAM_NAME, "/WEB-INF/static");
+        serverConfig.addServletConfig(staticServletConfig);
+        // add web dispatcher servlet
+        ServletConfig dispatcherServletConfig = TomcatEmbeddedServerFactory.getWebDispatcherServletConfig();
+        dispatcherServletConfig.setUrlPattern("/api/*");
+        serverConfig.addServletConfig(dispatcherServletConfig);
+        // add demo servlet
+        ServletConfig demoServletConfig = TomcatEmbeddedServerFactory.getDemoServletConfig();
+        demoServletConfig.setUrlPattern("/demo/*");
+        serverConfig.addServletConfig(demoServletConfig);
+        // start server
+        embeddedServerFactory.init(serverConfig);
+        embeddedServerFactory.start();
     }
 
     public static void testBeanResolver(){

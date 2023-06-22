@@ -70,11 +70,11 @@ public class WebDispatcher extends HttpServlet {
     public void callHandler(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         logger.info("New request received, RequestURI: "+req.getRequestURI());
         updateRequestAttribute(req);
-        try {
+        /*try {
             Collection<Part> parts = req.getParts();
         } catch (ServletException e) {
-            throw new RuntimeException(e);
-        }
+            logger.error(e);
+        }*/
         webRequestProcessor.call(req, resp);
     }
 

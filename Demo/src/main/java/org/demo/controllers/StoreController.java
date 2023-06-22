@@ -19,6 +19,7 @@ import org.web.annotations.params.global.Source;
 import org.web.annotations.params.types.QueryParam;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 
 @Controller(root = "/store")
@@ -46,8 +47,8 @@ public class StoreController{
             @QueryParam(name = "toto")
             @Valid
                 String orderId,
-                             HttpExchange httpExchange){
-        logger.debug("httpExchange: "+httpExchange.getRequestURI());
+            HttpServletRequest request){
+        logger.debug("httpExchange: "+request.getRequestURI());
         //ClassFinder.addToClassPath(Collections.singleton("toto"+System.currentTimeMillis()+".jar"));
         return orderService.getOrder(orderId);
     }

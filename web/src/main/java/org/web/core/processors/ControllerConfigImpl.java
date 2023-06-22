@@ -66,17 +66,20 @@ public class ControllerConfigImpl implements ControllerConfig {
      * @return
      */
     public Object getRouteInjectedParamValue(HttpServletRequest request, HttpServletResponse response, Class<?> paramType) {
+        Object injectedValue = null;
         if(isInjectableParam(paramType)){
             if(paramType.isAssignableFrom(HttpServletRequest.class))
-                return paramType.cast(request);
+                injectedValue = paramType.cast(request);
             if(paramType.isAssignableFrom(HttpServletResponse.class))
-                return paramType.cast(response);
+                injectedValue = paramType.cast(response);
             if(paramType.isAssignableFrom(Principal.class))
-                return paramType.cast(request.getUserPrincipal());
+                injectedValue = paramType.cast(request.getUserPrincipal());
             if(paramType.isAssignableFrom(HttpSession.class))
-                return paramType.cast(request.getSession());
+                injectedValue = paramType.cast(request.getSession());
+            if(injectedValue==null)
+                logger.error("Can't get value of injected parameter "+paramType);
         }
-        return null;
+        return injectedValue;
     }
 
     /**
@@ -86,6 +89,8 @@ public class ControllerConfigImpl implements ControllerConfig {
      * @return
      */
     public Object getFormattedValue(Object value, Class<?> type){
+        if(value==null)
+            return value;
         try {
             if(type.equals(Integer.class) || type.equals(int.class))
                 return Integer.valueOf((String) value);
