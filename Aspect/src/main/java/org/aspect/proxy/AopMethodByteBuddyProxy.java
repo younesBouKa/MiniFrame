@@ -35,17 +35,25 @@ public class AopMethodByteBuddyProxy<T> {
                                    @Origin Method targetMethod,
                                    @AllArguments Object[] args,
                                    @SuperMethod Method method) throws Throwable {
+        JoinPoint joinPoint = new JoinPoint();
+        joinPoint.setTargetMethod(method.toGenericString());
+        joinPoint.setTargetClass(method.getDeclaringClass().getCanonicalName());
+        joinPoint.setArgs(args);
+
         Object result;
-        ProxyEventHandler.execBeforeCall(instance, method, args);
+        ProxyEventHandler.execBeforeCall(joinPoint);
         try {
             method.setAccessible(true);
             result = method.invoke(instance, args);
         } catch (Throwable throwable) {
-            ProxyEventHandler.execOnException(instance, method, args, throwable.getCause());
+            joinPoint.setThrowable(throwable);
+            ProxyEventHandler.execOnException(joinPoint);
             throw throwable;
         }
-        result = ProxyEventHandler.execBeforeReturn(instance, method, args, result);
-        ProxyEventHandler.execAfterCall(instance, method, args, result);
+        joinPoint.setReturnVal(result);
+        result = ProxyEventHandler.execBeforeReturn(joinPoint);
+        joinPoint.setReturnVal(result);
+        ProxyEventHandler.execAfterCall(joinPoint);
         return result;
     }
 }

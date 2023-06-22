@@ -153,8 +153,11 @@ public class Launcher {
         logger.debug(userServiceWithBeanProvider.login(userDAO.getId()));
     }
 
-    public static void testAgentAspect(){
-        Loader.init();
+    public static void testAgentAspect() throws Exception {
+        Loader.buildAgent();
+        Toto toto = new Toto();
+        logger.debug("testAgentAspect: "+toto.titi());
+        logger.debug("testAgentAspect: "+ toto.tata());
     }
 
     public static void testJDKProxyAspect(){
@@ -188,6 +191,22 @@ public class Launcher {
         logger.debug("testAsmProxyAspect: "+ Toto.tata());
     }
 
+    public static void testJassProxyAspect() throws Exception {
+        Toto toto = new Toto();
+        Toto wrappedToto = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.JASS)
+                .wrap(toto);
+        logger.debug("testJassProxyAspect: "+wrappedToto.titi());
+        logger.debug("testJassProxyAspect: "+ wrappedToto.tata());
+        Toto toto_2 = new Toto();
+        Toto wrappedToto_2 = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.JASS)
+                .wrap(toto_2);
+        logger.debug("testJassProxyAspect: "+wrappedToto_2.titi());
+        logger.debug("testJassProxyAspect: "+ wrappedToto_2.tata());
+    }
     public static void testWeb() throws Exception {
         Map<String, HttpHandler> handlersMap = WebConfig
                 .getControllerProcessor()

@@ -25,16 +25,24 @@ public class AopMethodCglibProxy<T> implements MethodInterceptor {
     public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
         if(Modifier.isPrivate(method.getModifiers()) || Modifier.isFinal(method.getModifiers()))
             throw new RuntimeException("Method "+method.toGenericString()+" wrapped with a CGLIB proxy can't be private or final");
+        JoinPoint joinPoint = new JoinPoint();
+        joinPoint.setTargetMethod(method.toGenericString());
+        joinPoint.setTargetClass(method.getDeclaringClass().getCanonicalName());
+        joinPoint.setArgs(args);
+
         Object result;
-        ProxyEventHandler.execBeforeCall(instance, method, args);
+        ProxyEventHandler.execBeforeCall(joinPoint);
         try {
             result = methodProxy.invoke(instance, args);
         } catch (Throwable throwable) {
-            ProxyEventHandler.execOnException(instance, method, args, throwable);
+            joinPoint.setThrowable(throwable);
+            ProxyEventHandler.execOnException(joinPoint);
             throw throwable;
         }
-        result = ProxyEventHandler.execBeforeReturn(instance, method, args, result);
-        ProxyEventHandler.execAfterCall(instance, method, args, result);
+        joinPoint.setReturnVal(result);
+        result = ProxyEventHandler.execBeforeReturn(joinPoint);
+        joinPoint.setReturnVal(result);
+        ProxyEventHandler.execAfterCall(joinPoint);
         return result;
     }
 }

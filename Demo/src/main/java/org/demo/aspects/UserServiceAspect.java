@@ -12,12 +12,11 @@ import org.aspect.annotations.positions.Before;
 import org.aspect.annotations.positions.BeforeReturn;
 import org.aspect.annotations.types.Call;
 import org.aspect.annotations.types.Exception;
+import org.aspect.proxy.JoinPoint;
 import org.demo.services.UserService;
 import org.injection.annotations.Component;
 import org.tools.Log;
 import org.tools.exceptions.FrameworkException;
-
-import java.lang.reflect.Method;
 
 @Aspect
 public class UserServiceAspect {
@@ -31,22 +30,22 @@ public class UserServiceAspect {
     @Before
     @Expression(regex="(.*)hashCode(.*)")
     @Call
-    public void hashCodeAdvice(Method method, Object[] args, Object targetInstance, Object returnValue){
-        logger.info("BeforeCall : hashCodeAdvice : "+method.getName());
+    public void hashCodeAdvice(JoinPoint joinPoint){
+        logger.info("BeforeCall : hashCodeAdvice : "+joinPoint.getTargetMethod());
     }
 
     @After
     @TargetClass(target = UserService.class)
     @Call
-    public void loginAdvice(Method method, Object[] args, Object targetInstance, Object returnValue){
-        logger.info("AfterCall : loginAdvice : "+method.getName()+" : "+returnValue);
+    public void loginAdvice(JoinPoint joinPoint){
+        logger.info("AfterCall : loginAdvice : "+joinPoint.getTargetMethod()+" : "+joinPoint.getReturnVal());
     }
 
     @BeforeReturn
     @AnnotatedWith(annotationClass = Component.class)
     @Call
-    public void beforeReturnLoginAdvice(Method method, Object[] args, Object targetInstance, Object returnValue){
-        logger.info("BeforeReturn : beforeReturnLoginAdvice : "+method.getName()+" : "+returnValue);
+    public void beforeReturnLoginAdvice(JoinPoint joinPoint){
+        logger.info("BeforeReturn : beforeReturnLoginAdvice : "+joinPoint.getTargetMethod()+" : "+joinPoint.getReturnVal());
     }
 
 
@@ -54,27 +53,27 @@ public class UserServiceAspect {
     @AnnotatedWith(annotationClass = Component.class)
     @Order(order = 10)
     @Call
-    public void beforeReturnLoginOtherAdvice(Method method, Object[] args, Object targetInstance, Object returnValue){
-        logger.info("BeforeReturn : beforeReturnLoginOtherAdvice : "+method.getName()+" : "+ returnValue);
+    public void beforeReturnLoginOtherAdvice(JoinPoint joinPoint){
+        logger.info("BeforeReturn : beforeReturnLoginOtherAdvice : "+joinPoint.getTargetMethod()+" : "+ joinPoint.getReturnVal());
     }
 
     @Expression(regex= "(.)*")
     @Exception(types = {NullPointerException.class, ArithmeticException.class, FrameworkException.class})
-    public void onExceptionAdvice(Method method, Object[] args, Object targetInstance, Throwable throwable){
-        logger.info("OnException : onExceptionAdvice : "+method.getName()+" : "+ throwable);
+    public void onExceptionAdvice(JoinPoint joinPoint){
+        logger.info("OnException : onExceptionAdvice : "+joinPoint.getTargetMethod()+" : "+ joinPoint.getThrowable());
     }
 
     @Before
     @Call
     @Expression(regex = "(.*)titi(.*)")
-    public void beforeCallTitiAdvice(Method method, Object[] args, Object targetInstance, Object returnValue){
-        logger.info("BeforeCall : beforeCallTitiAdvice : "+method.getName()+" : "+ targetInstance);
+    public void beforeCallTitiAdvice(JoinPoint joinPoint){
+        logger.info("BeforeCall : beforeCallTitiAdvice : "+joinPoint.getTargetMethod());
     }
 
     @TargetClass(target= UserService.class)
     @Around
     @Call
-    public void targetClassAdvice(Method method, Object[] args, Object targetInstance, Object returnValue){
-        logger.info("TargetClass : targetClassAdvice : "+method.getName()+" : "+ targetInstance);
+    public void targetClassAdvice(JoinPoint joinPoint){
+        logger.info("TargetClass : targetClassAdvice : "+joinPoint.getTargetMethod());
     }
 }

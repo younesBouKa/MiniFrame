@@ -38,6 +38,8 @@ public class Wrapper {
             return AopMethodCglibProxy.newInstance(instance);
         } else if (proxyType == ProxyType.ASM && isAccessibleClass) {
             return AopMethodByteBuddyProxy.newInstance(instance);
+        }else if (proxyType == ProxyType.JASS) {
+            return AopJavassitProxy.newInstance(instance);
         }else{
             return AopMethodDynamicProxy.newInstance(instance);
         }

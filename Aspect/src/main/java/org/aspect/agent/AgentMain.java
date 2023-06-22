@@ -139,7 +139,7 @@ public class AgentMain {
             objectLifeCycleInterceptor.setClassFilterRegexps(classFilterRegexps);
             instrumentation.addTransformer(objectLifeCycleInterceptor);
         }else if(transformerType.equals("weaver")){
-            AspectWeaverInterceptor aspectWeaverInterceptor = new AspectWeaverInterceptor(new AspectScanManagerImpl());
+            AspectWeaverInterceptor aspectWeaverInterceptor = new AspectWeaverInterceptor();
             aspectWeaverInterceptor.setClassFilterRegexps(classFilterRegexps);
             instrumentation.addTransformer(aspectWeaverInterceptor);
         }else{

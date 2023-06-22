@@ -1,6 +1,7 @@
 package org.aspect.processor;
 
 import org.aspect.annotations.InitAspect;
+import org.aspect.proxy.JoinPoint;
 import org.aspect.scanners.AspectScanManager;
 import org.tools.annotations.AnnotationTools;
 
@@ -73,8 +74,9 @@ public interface AdviceProcessor {
 
     AspectScanManager getAspectScanManager();
     void setAspectScanManager(AspectScanManager aspectScanManager);
-    void execBeforeCall(Object targetInstance, Method method, Object[] args);
-    void execAfterCall(Object targetInstance, Method method, Object[] args, Object returnVal);
-    Object execBeforeReturn(Object targetInstance, Method method, Object[] args, Object returnVal);
-    void execOnException(Object targetInstance, Method method, Object[] args, Throwable throwable);
+
+    void execBeforeCall(JoinPoint joinPoint);
+    void execAfterCall(JoinPoint joinPoint);
+    Object execBeforeReturn(JoinPoint joinPoint);
+    void execOnException(JoinPoint joinPoint);
 }

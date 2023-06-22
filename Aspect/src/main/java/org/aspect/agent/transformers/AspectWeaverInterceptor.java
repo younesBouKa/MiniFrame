@@ -5,6 +5,8 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.aspect.proxy.AopJavassitProxy;
+import org.aspect.proxy.Wrapper;
 import org.aspect.scanners.AspectScanManager;
 
 import java.io.ByteArrayInputStream;
@@ -14,11 +16,6 @@ import java.security.ProtectionDomain;
 
 public class AspectWeaverInterceptor extends CustomTransformer {
     private static final Logger logger = LogManager.getLogger(AspectWeaverInterceptor.class);
-    private AspectScanManager aspectScanManager;
-
-    public AspectWeaverInterceptor(AspectScanManager aspectScanManager){
-        this.aspectScanManager = aspectScanManager;
-    }
 
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
@@ -31,13 +28,7 @@ public class AspectWeaverInterceptor extends CustomTransformer {
             try {
                 ClassPool classPool = ClassPool.getDefault();
                 CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
-                for(CtMethod method: ctClass.getDeclaredMethods()){
-                    Class<?> targetClass = classBeingRedefined;
-                    Method targetMethod = targetClass.getDeclaredMethod(method.getName());
-
-                    //method.insertBefore(beforeMethodInjectedCode(normalizedClassName, method));
-                    //method.insertAfter(afterMethodInjectedCode(normalizedClassName, method));
-                }
+                ctClass = AopJavassitProxy.weaveClassMethods(ctClass);
                 // getting bytes
                 byteCode = ctClass.toBytecode();
                 ctClass.detach();

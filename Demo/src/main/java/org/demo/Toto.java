@@ -5,7 +5,9 @@ import org.tools.exceptions.FrameworkException;
 public class Toto {
     public String titi() {
         //return "titi";
-        throw new FrameworkException("sdsd");
+        if(false)
+            throw new FrameworkException("sdsd");
+        return "titi";
     }
 
     public static String tata() throws Exception {
