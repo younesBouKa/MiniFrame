@@ -3,6 +3,9 @@ package org.web;
 import org.injection.InjectionConfig;
 import org.tools.exceptions.FrameworkException;
 import org.web.core.*;
+import org.web.core.helpers.ControllerConfigImpl;
+import org.web.core.helpers.MethodInfoBuilderImpl;
+import org.web.core.helpers.ParamInfoBuilderImpl;
 import org.web.core.processors.*;
 
 public class WebConfig {
