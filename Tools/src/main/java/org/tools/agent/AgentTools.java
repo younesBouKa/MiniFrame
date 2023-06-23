@@ -142,8 +142,8 @@ public class AgentTools {
             manifest = new Manifest();
             manifest.read(Files.newInputStream(foundedManifestFile.toPath()));
         }
-
-        File jarFile = prepareJarFile("injection_agent_", packageDir, packageName, manifest);
+        String agentJarFilePrefix = packageName.replaceAll("\\.","_")+"_";
+        File jarFile = prepareJarFile(agentJarFilePrefix, packageDir, packageName, manifest);
         return jarFile;
     }
 

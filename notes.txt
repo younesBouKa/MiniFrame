@@ -41,3 +41,15 @@ Annotations:
             @RequestScope
             @SessionScope
 
+
+
+=============> TODOS:
+* HttpFilters, Security manager
+* Session holders
+* Exception interceptors
+* Response Formatters
+* Path Variables
+* Multipart wrappers
+* Scan subclasses in injection module
+* Aspect Oriented Programming AOP
+* Customized config file parser (xml, json, yaml)

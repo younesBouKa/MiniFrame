@@ -17,4 +17,13 @@ hs_err_pid*
 replay_pid*
 
 .idea
-*/target
+/Agent/target/
+/Aspect/target/
+/Demo/target/
+/Injection/target/
+/log4j/
+/target/
+/Tools/target/
+/Weaver/target/
+/web/target/
+/tomcat.*/

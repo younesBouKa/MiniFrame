@@ -1,6 +1,9 @@
 package org.demo;
 
 import com.sun.net.httpserver.HttpHandler;
+import org.aspect.agent.Loader;
+import org.aspect.proxy.ProxyType;
+import org.aspect.proxy.Wrapper;
 import org.demo.Server.Server;
 import org.demo.dao.UserDAO;
 import org.demo.services.ProductService;
@@ -13,6 +16,7 @@ import org.injection.annotations.Component;
 import org.injection.core.providers.BeanProvider;
 import org.injection.core.data.AlternativeInstance;
 import org.injection.core.data.ScopeInstance;
+import org.injection.core.providers.BeanProvider;
 import org.injection.core.providers.BeanResolverImpl;
 import org.injection.others.DebuggerInstance;
 import org.injection.others.TestBean;
@@ -21,13 +25,16 @@ import org.tools.Log;
 import org.tools.agent.AgentLoader;
 import org.tools.annotations.AnnotationTools;
 import org.tools.annotations.AnnotationTree;
+import org.tools.exceptions.FrameworkException;
 import org.web.WebConfig;
 import org.web.annotations.WebScanPackages;
 import org.web.filters.basic.GzipFilter;
+import org.web.server.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Scope;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -46,20 +53,64 @@ public class Launcher {
     public String field;
 
     public static void main(String[] args) throws Exception {
+        testDemoTomcatEmbeddedServer();
         //testCustomQualifierManager();
         //testTools();
         //testAnnotationTools();
-        testDI();
+        //testDI();
+        //testJDKProxyAspect();
+        //testCglibProxyAspect();
+        //testAsmProxyAspect(); // TODO need more work for method and class signature (new class created with new name)
+        //testJassProxyAspect(); // FIXME not yet finished
+        // ------- testAgentAspect();
+        //testDI();
         //ClassFinder.addToClassPath(Collections.singleton("path."+System.currentTimeMillis()+".jar"));
         //System.out.println(WebConfig.getControllerProcessor().getRouteHandlers());
-        testWeb();
-        testBeanResolver();
+        //testWeb();
+        //testBeanResolver();
         //testProxy();
         //testDebugger();
         //testBuildAgent();
         //testSearchAgent();
         //testAnnotationTree();
 
+    }
+
+    public static void testDemoTomcatEmbeddedServer(){
+        EmbeddedServerFactory embeddedServerFactory = new TomcatEmbeddedServerFactory();
+        // create server config instance
+        ServerConfig serverConfig = new ServerConfig();
+        serverConfig.setPort(8090);
+        serverConfig.setContextPath("/webapp");
+        serverConfig.setDocBase(new File("Demo/src/main/webapp/").getAbsolutePath());
+        serverConfig.setListenerClasses(TomcatEmbeddedServerFactory.getListenersClasses());
+        // add jsp servlet
+        ServletConfig jspServletConfig = new ServletConfig();
+        jspServletConfig.setServletName("JspServlet");
+        jspServletConfig.setServletClass("org.apache.jasper.servlet.JspServlet");
+        jspServletConfig.setUrlPattern("*.jsp");
+        jspServletConfig.addInitParam("compilerSourceVM", "1.8");
+        jspServletConfig.addInitParam("compilerTargetVM", "1.8");
+        serverConfig.addServletConfig(jspServletConfig);
+        // add static resources servlet
+        ServletConfig staticServletConfig = new ServletConfig();
+        staticServletConfig.setServletName("StaticServlet");
+        staticServletConfig.setServletClass(StaticServlet.class.getCanonicalName());
+        staticServletConfig.setUrlPattern("/static/*");
+        staticServletConfig.addInitParam(StaticServlet.PATH_PREFIX_PARAM_NAME, "/static");
+        staticServletConfig.addInitParam(StaticServlet.STATIC_RESOURCE_FOLDER_PARAM_NAME, "/WEB-INF/static");
+        serverConfig.addServletConfig(staticServletConfig);
+        // add web dispatcher servlet
+        ServletConfig dispatcherServletConfig = TomcatEmbeddedServerFactory.getWebDispatcherServletConfig();
+        dispatcherServletConfig.setUrlPattern("/api/*");
+        serverConfig.addServletConfig(dispatcherServletConfig);
+        // add demo servlet
+        ServletConfig demoServletConfig = TomcatEmbeddedServerFactory.getDemoServletConfig();
+        demoServletConfig.setUrlPattern("/demo/*");
+        serverConfig.addServletConfig(demoServletConfig);
+        // start server
+        embeddedServerFactory.init(serverConfig);
+        embeddedServerFactory.start();
     }
 
     public static void testBeanResolver(){
@@ -94,7 +145,7 @@ public class Launcher {
         AgentLoader.buildAndAttachAgent(
                 Launcher.class.getCanonicalName(),
                 "org.agent",
-                "org.agent.Agent",
+                "org.agent.AgentMain",
                 options
                 );
     }
@@ -105,7 +156,7 @@ public class Launcher {
         options.put("cnfr", "(org\\.demo\\.).*"); // class name filter regex
         AgentLoader.searchAndAttachAgent(
                 Launcher.class.getCanonicalName(),
-                "org.agent.Agent",
+                "org.agent.AgentMain",
                 options
         );
     }
@@ -145,6 +196,60 @@ public class Launcher {
         logger.debug(userServiceWithBeanProvider.login(userDAO.getId()));
     }
 
+    public static void testAgentAspect() throws Exception {
+        Loader.buildAgent();
+        Toto toto = new Toto();
+        logger.debug("testAgentAspect: "+toto.titi());
+        logger.debug("testAgentAspect: "+ toto.tata());
+    }
+
+    public static void testJDKProxyAspect(){
+        BeanProvider defaultBeanProvider = DefaultProvider.init();
+        UserService userService = defaultBeanProvider.getBeanInstance(UserService.class);
+        UserService wrappedUserService = (UserService) Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.JDK)
+                .wrap(userService);
+        logger.debug("testProxyAspect: "+wrappedUserService.hashCode());
+        logger.debug("testProxyAspect: "+wrappedUserService.login("toto"));
+    }
+
+    public static void testCglibProxyAspect() throws Exception {
+        Toto toto = new Toto();
+        Toto wrappedToto = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.CGLIB)
+                .wrap(toto);
+        logger.debug("testCglibProxyAspect: "+wrappedToto.titi());
+        logger.debug("testCglibProxyAspect: "+ Toto.tata());
+    }
+
+    public static void testAsmProxyAspect() throws Exception {
+        Toto toto = new Toto();
+        Toto wrappedToto = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.ASM)
+                .wrap(toto);
+        logger.debug("testAsmProxyAspect: "+wrappedToto.titi());
+        logger.debug("testAsmProxyAspect: "+ Toto.tata());
+    }
+
+    public static void testJassProxyAspect() throws Exception {
+        Toto toto = new Toto();
+        Toto wrappedToto = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.JASS)
+                .wrap(toto);
+        logger.debug("testJassProxyAspect: "+wrappedToto.titi());
+        logger.debug("testJassProxyAspect: "+ Toto.tata());
+        Toto toto_2 = new Toto();
+        Toto wrappedToto_2 = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.JASS)
+                .wrap(toto_2);
+        logger.debug("testJassProxyAspect: "+wrappedToto_2.titi());
+        logger.debug("testJassProxyAspect: "+ Toto.tata());
+    }
     public static void testWeb() throws Exception {
         Map<String, HttpHandler> handlersMap = WebConfig
                 .getControllerProcessor()
@@ -235,5 +340,4 @@ public class Launcher {
         System.out.println("Bean: "+bean);
     }
 }
-
 

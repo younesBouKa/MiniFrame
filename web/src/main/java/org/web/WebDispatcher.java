@@ -2,23 +2,28 @@ package org.web;
 
 import org.tools.ClassFinder;
 import org.tools.Log;
-import org.web.core.WebRequestProcessor;
+import org.web.core.HttpRequestProcessor;
+import org.web.core.processors.HttpRequestProcessorImpl;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.web.Constants.*;
 
 public class WebDispatcher extends HttpServlet {
     private static final Log logger = Log.getInstance(WebDispatcher.class);
-    private WebRequestProcessor webRequestProcessor;
+    private HttpRequestProcessor httpRequestProcessor;
     private WebContext webContext;
 
     public void init() throws ServletException {
@@ -43,7 +48,7 @@ public class WebDispatcher extends HttpServlet {
         ctx.setAttribute(WEB_CONTEXT, webContext);
         ctx.setAttribute(INJECTION_CONFIG, webContext.getInjectionConfig());
         // init Web request processor with web context
-        webRequestProcessor = new WebRequestProcessor(webContext);
+        httpRequestProcessor = new HttpRequestProcessorImpl(webContext);
         super.init();
     }
 
@@ -70,12 +75,7 @@ public class WebDispatcher extends HttpServlet {
     public void callHandler(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         logger.info("New request received, RequestURI: "+req.getRequestURI());
         updateRequestAttribute(req);
-        try {
-            Collection<Part> parts = req.getParts();
-        } catch (ServletException e) {
-            throw new RuntimeException(e);
-        }
-        webRequestProcessor.call(req, resp);
+        httpRequestProcessor.processRequest(req, resp);
     }
 
     @Override
