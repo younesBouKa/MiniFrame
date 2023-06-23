@@ -1,0 +1,35 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="web install local repo" type="MavenRunConfiguration" factoryName="Maven">
+    <MavenSettings>
+      <option name="myGeneralSettings" />
+      <option name="myRunnerSettings" />
+      <option name="myRunnerParameters">
+        <MavenRunnerParameters>
+          <option name="profiles">
+            <set />
+          </option>
+          <option name="goals">
+            <list>
+              <option value="install:install-file" />
+              <option value="-DgroupId=org.frame" />
+              <option value="-DartifactId=web" />
+              <option value="-Dversion=1.0-SNAPSHOT" />
+              <option value="-Dfile=target/web-1.0-SNAPSHOT.jar" />
+              <option value="-Dpackaging=jar" />
+              <option value="-DgeneratePom=true" />
+              <option value="-DlocalRepositoryPath=../mvn-repo" />
+              <option value="-DcreateChecksum=true" />
+            </list>
+          </option>
+          <option name="pomFileName" />
+          <option name="profilesMap">
+            <map />
+          </option>
+          <option name="resolveToWorkspace" value="false" />
+          <option name="workingDirPath" value="$PROJECT_DIR$/web" />
+        </MavenRunnerParameters>
+      </option>
+    </MavenSettings>
+    <method v="2" />
+  </configuration>
+</component>
