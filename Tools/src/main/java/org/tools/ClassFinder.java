@@ -52,6 +52,20 @@ public class ClassFinder {
     }
 
     /**
+     * Add path to class path
+     * @param pathToAdd
+     */
+    public static void addToClassPath(String pathToAdd){
+        boolean pathChanged = paths.add(pathToAdd);
+        String preparedCP = String.join(classPathSeparator, paths);
+        System.setProperty(JAVA_CLASS_PATH, preparedCP);
+        if(pathChanged){
+            logger.info("New path added to class path: "+pathToAdd);
+            update(true, false);
+        }
+    }
+
+    /**
      * Can be used before calling other methods to optimize scanning phase and minimize size of cache
      * @param loadFilter
      */

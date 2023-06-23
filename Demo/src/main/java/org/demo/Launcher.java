@@ -1,6 +1,9 @@
 package org.demo;
 
 import com.sun.net.httpserver.HttpHandler;
+import org.aspect.agent.Loader;
+import org.aspect.proxy.ProxyType;
+import org.aspect.proxy.Wrapper;
 import org.demo.Server.Server;
 import org.demo.dao.UserDAO;
 import org.demo.services.ProductService;
@@ -10,9 +13,9 @@ import org.injection.InjectionConfig;
 import org.injection.annotations.AlternativeConfig;
 import org.injection.annotations.BeanScanPackages;
 import org.injection.annotations.Component;
-import org.injection.core.providers.BeanProvider;
 import org.injection.core.data.AlternativeInstance;
 import org.injection.core.data.ScopeInstance;
+import org.injection.core.providers.BeanProvider;
 import org.injection.core.providers.BeanResolverImpl;
 import org.injection.others.DebuggerInstance;
 import org.injection.others.TestBean;
@@ -21,6 +24,7 @@ import org.tools.Log;
 import org.tools.agent.AgentLoader;
 import org.tools.annotations.AnnotationTools;
 import org.tools.annotations.AnnotationTree;
+import org.tools.exceptions.FrameworkException;
 import org.web.WebConfig;
 import org.web.annotations.WebScanPackages;
 import org.web.filters.basic.GzipFilter;
@@ -49,11 +53,15 @@ public class Launcher {
         //testCustomQualifierManager();
         //testTools();
         //testAnnotationTools();
-        testDI();
+        //testJDKProxyAspect();
+        //testCglibProxyAspect();
+        testAsmProxyAspect();
+        //testAgentAspect();
+        //testDI();
         //ClassFinder.addToClassPath(Collections.singleton("path."+System.currentTimeMillis()+".jar"));
         //System.out.println(WebConfig.getControllerProcessor().getRouteHandlers());
-        testWeb();
-        testBeanResolver();
+        //testWeb();
+        //testBeanResolver();
         //testProxy();
         //testDebugger();
         //testBuildAgent();
@@ -94,7 +102,7 @@ public class Launcher {
         AgentLoader.buildAndAttachAgent(
                 Launcher.class.getCanonicalName(),
                 "org.agent",
-                "org.agent.Agent",
+                "org.agent.AgentMain",
                 options
                 );
     }
@@ -105,7 +113,7 @@ public class Launcher {
         options.put("cnfr", "(org\\.demo\\.).*"); // class name filter regex
         AgentLoader.searchAndAttachAgent(
                 Launcher.class.getCanonicalName(),
-                "org.agent.Agent",
+                "org.agent.AgentMain",
                 options
         );
     }
@@ -145,6 +153,60 @@ public class Launcher {
         logger.debug(userServiceWithBeanProvider.login(userDAO.getId()));
     }
 
+    public static void testAgentAspect() throws Exception {
+        Loader.buildAgent();
+        Toto toto = new Toto();
+        logger.debug("testAgentAspect: "+toto.titi());
+        logger.debug("testAgentAspect: "+ toto.tata());
+    }
+
+    public static void testJDKProxyAspect(){
+        BeanProvider defaultBeanProvider = DefaultProvider.init();
+        UserService userService = defaultBeanProvider.getBeanInstance(UserService.class);
+        UserService wrappedUserService = (UserService) Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.JDK)
+                .wrap(userService);
+        logger.debug("testProxyAspect: "+wrappedUserService.hashCode());
+        logger.debug("testProxyAspect: "+wrappedUserService.login("toto"));
+    }
+
+    public static void testCglibProxyAspect() throws Exception {
+        Toto toto = new Toto();
+        Toto wrappedToto = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.CGLIB)
+                .wrap(toto);
+        logger.debug("testCglibProxyAspect: "+wrappedToto.titi());
+        logger.debug("testCglibProxyAspect: "+ Toto.tata());
+    }
+
+    public static void testAsmProxyAspect() throws Exception {
+        Toto toto = new Toto();
+        Toto wrappedToto = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.ASM)
+                .wrap(toto);
+        logger.debug("testAsmProxyAspect: "+wrappedToto.titi());
+        logger.debug("testAsmProxyAspect: "+ Toto.tata());
+    }
+
+    public static void testJassProxyAspect() throws Exception {
+        Toto toto = new Toto();
+        Toto wrappedToto = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.JASS)
+                .wrap(toto);
+        logger.debug("testJassProxyAspect: "+wrappedToto.titi());
+        logger.debug("testJassProxyAspect: "+ wrappedToto.tata());
+        Toto toto_2 = new Toto();
+        Toto wrappedToto_2 = (Toto)Wrapper
+                .init()
+                .setDefaultProxyType(ProxyType.JASS)
+                .wrap(toto_2);
+        logger.debug("testJassProxyAspect: "+wrappedToto_2.titi());
+        logger.debug("testJassProxyAspect: "+ wrappedToto_2.tata());
+    }
     public static void testWeb() throws Exception {
         Map<String, HttpHandler> handlersMap = WebConfig
                 .getControllerProcessor()
@@ -235,5 +297,4 @@ public class Launcher {
         System.out.println("Bean: "+bean);
     }
 }
-
 

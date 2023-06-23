@@ -13,6 +13,7 @@
     <packaging>jar</packaging>
 
     <properties>
+        <weaver.version>1.0-SNAPSHOT</weaver.version>
     </properties>
 
     <dependencies>
@@ -28,10 +29,45 @@
             <version>${web.version}</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.frame</groupId>
+            <artifactId>aspect</artifactId>
+            <version>${aspect.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.frame</groupId>
+            <artifactId>Weaver</artifactId>
+            <version>${weaver.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.frame</groupId>
+                    <artifactId>Weaver</artifactId>
+                    <version>${weaver.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.frame</groupId>
+                <artifactId>Weaver</artifactId>
+                <version>${weaver.version}</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>touch</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
