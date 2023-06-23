@@ -14,8 +14,8 @@
         <module>injection</module>
         <module>web</module>
         <module>agent</module>
-        <module>Aspect</module>
-        <module>Weaver</module>
+        <module>aspect</module>
+        <module>weaver</module>
     </modules>
 
     <properties>
