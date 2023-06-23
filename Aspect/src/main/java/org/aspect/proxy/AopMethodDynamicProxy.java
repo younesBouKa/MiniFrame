@@ -24,8 +24,8 @@ public class AopMethodDynamicProxy<T> implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         JoinPoint joinPoint = new JoinPoint();
-        joinPoint.setTargetMethod(method.toGenericString());
-        joinPoint.setTargetClass(method.getDeclaringClass().getCanonicalName());
+        joinPoint.setTargetMethod(method);
+        joinPoint.setTargetClass(method.getDeclaringClass());
         joinPoint.setArgs(args);
 
         Object result;

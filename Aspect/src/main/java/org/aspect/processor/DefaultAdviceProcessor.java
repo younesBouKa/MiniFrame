@@ -36,22 +36,8 @@ public class DefaultAdviceProcessor implements AdviceProcessor{
         this.aspectScanManager = aspectScanManager;
     }
 
-    public Method getTargetMethodFromJointPoint(JoinPoint joinPoint){
-        if (joinPoint==null || joinPoint.getTargetClass()==null || joinPoint.getTargetMethod()==null)
-            return null;
-        Class<?> targetClass = ClassFinder.loadClass(joinPoint.getTargetClass());
-        Method method = null;
-        for(Method targetMethod : targetClass.getDeclaredMethods()){
-            if(targetMethod.toGenericString().equals(joinPoint.getTargetMethod())){
-                method = targetMethod;
-                break;
-            }
-        }
-        return method;
-    }
-
     public void execBeforeCall(JoinPoint joinPoint){
-        Method method = getTargetMethodFromJointPoint(joinPoint);
+        Method method = joinPoint.getTargetMethod();
         if (method==null )
             return;
         // get matching advices
@@ -85,7 +71,7 @@ public class DefaultAdviceProcessor implements AdviceProcessor{
     }
 
     public Object execBeforeReturn(JoinPoint joinPoint){
-        Method method = getTargetMethodFromJointPoint(joinPoint);
+        Method method = joinPoint.getTargetMethod();
         Object returnVal = joinPoint.getReturnVal();
         if (method==null )
             return returnVal;
@@ -119,7 +105,7 @@ public class DefaultAdviceProcessor implements AdviceProcessor{
     }
 
     public void execAfterCall(JoinPoint joinPoint){
-        Method method = getTargetMethodFromJointPoint(joinPoint);
+        Method method = joinPoint.getTargetMethod();
         if (method==null )
             return;
         // get matching advices
@@ -153,7 +139,7 @@ public class DefaultAdviceProcessor implements AdviceProcessor{
     }
 
     public void execOnException(JoinPoint joinPoint){
-        Method method = getTargetMethodFromJointPoint(joinPoint);
+        Method method = joinPoint.getTargetMethod();
         Throwable throwable = joinPoint.getThrowable();
         if (method==null )
             return;

@@ -57,11 +57,11 @@ public class Launcher {
         //testCustomQualifierManager();
         //testTools();
         //testAnnotationTools();
-        testDI();
+        //testDI();
         //testJDKProxyAspect();
         //testCglibProxyAspect();
-        //testAsmProxyAspect();
-        //testJassProxyAspect();
+        //testAsmProxyAspect(); // TODO need more work for method and class signature (new class created with new name)
+        //testJassProxyAspect(); // FIXME not yet finished
         // ------- testAgentAspect();
         //testDI();
         //ClassFinder.addToClassPath(Collections.singleton("path."+System.currentTimeMillis()+".jar"));
@@ -241,14 +241,14 @@ public class Launcher {
                 .setDefaultProxyType(ProxyType.JASS)
                 .wrap(toto);
         logger.debug("testJassProxyAspect: "+wrappedToto.titi());
-        logger.debug("testJassProxyAspect: "+ wrappedToto.tata());
+        logger.debug("testJassProxyAspect: "+ Toto.tata());
         Toto toto_2 = new Toto();
         Toto wrappedToto_2 = (Toto)Wrapper
                 .init()
                 .setDefaultProxyType(ProxyType.JASS)
                 .wrap(toto_2);
         logger.debug("testJassProxyAspect: "+wrappedToto_2.titi());
-        logger.debug("testJassProxyAspect: "+ wrappedToto_2.tata());
+        logger.debug("testJassProxyAspect: "+ Toto.tata());
     }
     public static void testWeb() throws Exception {
         Map<String, HttpHandler> handlersMap = WebConfig

@@ -2,9 +2,11 @@ package org.aspect.proxy;
 
 import org.aspect.annotations.Advice;
 
+import java.lang.reflect.Method;
+
 public class JoinPoint {
-    private String targetClass;
-    private String targetMethod;
+    private Class<?> targetClass;
+    private Method targetMethod;
     private Object[] args;
     private Object returnVal;
     private Throwable throwable;
@@ -45,19 +47,19 @@ public class JoinPoint {
         this.advice = advice;
     }
 
-    public String getTargetClass() {
+    public Class<?> getTargetClass() {
         return targetClass;
     }
 
-    public void setTargetClass(String targetClass) {
+    public void setTargetClass(Class<?> targetClass) {
         this.targetClass = targetClass;
     }
 
-    public String getTargetMethod() {
+    public Method getTargetMethod() {
         return targetMethod;
     }
 
-    public void setTargetMethod(String targetMethod) {
+    public void setTargetMethod(Method targetMethod) {
         this.targetMethod = targetMethod;
     }
 

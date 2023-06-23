@@ -26,8 +26,8 @@ public class AopMethodCglibProxy<T> implements MethodInterceptor {
         if(Modifier.isPrivate(method.getModifiers()) || Modifier.isFinal(method.getModifiers()))
             throw new RuntimeException("Method "+method.toGenericString()+" wrapped with a CGLIB proxy can't be private or final");
         JoinPoint joinPoint = new JoinPoint();
-        joinPoint.setTargetMethod(method.toGenericString());
-        joinPoint.setTargetClass(method.getDeclaringClass().getCanonicalName());
+        joinPoint.setTargetMethod(method);
+        joinPoint.setTargetClass(method.getDeclaringClass());
         joinPoint.setArgs(args);
 
         Object result;
