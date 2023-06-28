@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 public class RouteHandler {
     private String methodHttp;
     private String rootPath;
-    private Class controller;
+    private Class<?> controller;
     private Method routeMethod;
     private MethodInfo methodInfo;
 
@@ -22,11 +22,11 @@ public class RouteHandler {
         this.rootPath = rootPath;
     }
 
-    public Class getController() {
+    public Class<?> getController() {
         return controller;
     }
 
-    public void setController(Class controller) {
+    public void setController(Class<?> controller) {
         this.controller = controller;
     }
 

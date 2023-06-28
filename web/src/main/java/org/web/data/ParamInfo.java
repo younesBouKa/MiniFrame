@@ -9,7 +9,7 @@ public class ParamInfo {
     private String usedName;
     private ParamSrc paramSrc;
     private String name;
-    private Class type;
+    private Class<?> type;
 
     public ParamInfo() {
     }
@@ -30,11 +30,11 @@ public class ParamInfo {
         this.name = name;
     }
 
-    public Class getType() {
+    public Class<?>  getType() {
         return type;
     }
 
-    public void setType(Class type) {
+    public void setType(Class<?>  type) {
         this.type = type;
     }
 

@@ -18,6 +18,12 @@ public class RequestResolverImpl implements RequestResolver {
     public RequestResolverImpl(){
         update(true);
     }
+
+    @Override
+    public void autoConfigure() {
+        update(true);
+    }
+
     public void update(boolean force){
         long lastUpdate = ClassFinder.getLastUpdateTimeStamp();
         if (lastUpdateTimeStamp < lastUpdate && ClassFinder.isInitialized() || force) {
@@ -26,11 +32,18 @@ public class RequestResolverImpl implements RequestResolver {
             prepareRouteHandlers();
         }
     }
+
+    public Map<String, RouteHandler> getRouteHandlers(){
+        update(false);
+        return routeHandlerMap;
+    }
+
+    /*----------------------------- Inner methods -------------------------------*/
     private void prepareRouteHandlers(){
         logger.debug("Scanning for route handlers for the ["+updateCount+"] time(s) ... ");
         long duration = System.currentTimeMillis();
         routeHandlerMap = WebConfig
-                .getControllerProcessor()
+                .getControllerProcessor(null)
                 .getRouteHandlers();
         logger.debug("Scanning for route handlers ended in ["+(System.currentTimeMillis() - duration)+"] Millis " +
                 "with "+ routeHandlerMap.size() +" handler(s)");
@@ -38,9 +51,5 @@ public class RequestResolverImpl implements RequestResolver {
             logger.error(
                     "No controller found in project"
             );
-    }
-    public Map<String, RouteHandler> getRouteHandlers(){
-        update(false);
-        return routeHandlerMap;
     }
 }

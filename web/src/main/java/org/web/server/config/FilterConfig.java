@@ -1,4 +1,4 @@
-package org.web.server;
+package org.web.server.config;
 
 import javax.servlet.Filter;
 import java.util.HashMap;

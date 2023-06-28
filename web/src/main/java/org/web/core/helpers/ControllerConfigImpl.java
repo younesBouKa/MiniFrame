@@ -43,6 +43,11 @@ public class ControllerConfigImpl implements ControllerConfig {
 
     }
 
+    @Override
+    public void autoConfigure() {
+
+    }
+
     public Set<Class> getInjectableParamsClasses(){
         return paramInjectableClasses;
     }

@@ -4,13 +4,13 @@ import org.tools.Log;
 import org.tools.exceptions.FrameworkException;
 import org.web.WebConfig;
 import org.web.annotations.params.global.ParamSrc;
+import org.web.core.ControllerConfig;
 import org.web.core.RequestParser;
 import org.web.data.ParamInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,31 +20,10 @@ import java.util.Set;
 public class RequestParserImpl implements RequestParser {
     private static final Log logger = Log.getInstance(RequestParserImpl.class);
 
-    /**
-     * This method controle parameters and assure parameters order
-     * @param method
-     * @param parameters
-     * @return
-     */
-    public Object[] formatParamsValues(Method method, Map<String, Object> parameters){
-        Parameter[] methodParameters = method.getParameters();
-        if(methodParameters.length!= parameters.size()){
-            logger.error("Extracted parameters are not valid\n" +
-                    "Method parameters: "+Arrays.asList(methodParameters)+"\n" +
-                    "Extracted parameters: "+parameters);
-            throw new FrameworkException("Extracted parameters are not valid");
-        }
-        Object[] values = new Object[methodParameters.length];
-        int i=0;
-        for(Parameter parameter : methodParameters){
-            String paramName = parameter.getName();
-            if(!parameters.containsKey(paramName))
-                throw new FrameworkException("Can't find value for parameter ["+ parameter +"]");
-            values[i++] = WebConfig
-                    .getControllerConfig()
-                    .getFormattedValue(parameters.get(paramName), parameter.getType());
-        }
-        return values;
+
+    @Override
+    public void autoConfigure() {
+
     }
 
     /**
@@ -55,32 +34,42 @@ public class RequestParserImpl implements RequestParser {
      * @return
      * @throws IOException
      */
-    public Map<String, Object> extractParametersRawValues(HttpServletRequest request, HttpServletResponse response, Set<ParamInfo> paramsInfo, String handlerPath) throws IOException {
+    public Map<String, Object> extractParametersRawValues(HttpServletRequest request,
+                                                          HttpServletResponse response,
+                                                          Set<ParamInfo> paramsInfo,
+                                                          String handlerPath) throws IOException {
         Map<String, Object> bodyParams = getBodyParams(request);
-        Map<String, Object> queryParams = getQueryParams(request);
-        Map<String, Object> pathParams = getPathParams(request, handlerPath);
+        Map<String, Object> queryParams = getQueryParams(request.getQueryString());
+        Map<String, Object> pathParams = getPathParams(request.getPathInfo(), handlerPath);
         Map<String, Object> headerParams = getHeaderParams(request);
         // prepare params
         Map<String, Object> neededParams = new HashMap<>();
         String paramName, paramUsedName;
         Object paramValue;
+        Class<?> methodParamClass;
+        ParamSrc paramSrc;
+        ControllerConfig controllerConfig =  WebConfig.getControllerConfig();
         for(ParamInfo methodParamInfo : paramsInfo) {
-            paramName = methodParamInfo.getName(); // name or used name in annotation
-            paramUsedName = methodParamInfo.getUsedName(); // name or used name in annotation
-            paramValue = WebConfig
-                    .getControllerConfig()
-                    .getRouteInjectedParamValue(request, response, methodParamInfo.getType(), paramName);
-            if(ParamSrc.PATH.equals(methodParamInfo.getParamType())){
+            paramName = methodParamInfo.getName(); // name in method args
+            paramUsedName = methodParamInfo.getUsedName(); // name used in annotation
+            methodParamClass = methodParamInfo.getType();
+            paramSrc = methodParamInfo.getParamType();
+            paramValue = null;
+            if(controllerConfig.isInjectableParam(methodParamClass)){
+                paramValue =controllerConfig.getRouteInjectedParamValue(request, response, methodParamClass, paramName);
+            }else if(ParamSrc.PATH.equals(paramSrc)){
                 paramValue = pathParams.get(paramUsedName);
-            }else if(ParamSrc.QUERY.equals(methodParamInfo.getParamType())){
+            }else if(ParamSrc.QUERY.equals(paramSrc)){
                 paramValue = queryParams.get(paramUsedName);
-            }else if(ParamSrc.BODY.equals(methodParamInfo.getParamType())){
+            }else if(ParamSrc.BODY.equals(paramSrc)){
                 paramValue = bodyParams.get(paramUsedName);
-            }else if(ParamSrc.HEADER.equals(methodParamInfo.getParamType())){
+            }else if(ParamSrc.HEADER.equals(paramSrc)){
                 paramValue = headerParams.get(paramUsedName);
-            }else if(paramValue==null){
-                logger.error("Unknown parameter type: "+methodParamInfo);
+            }else { // same as ParamSrc.BODY
+                paramValue = bodyParams.get(paramUsedName);
             }
+            if(paramValue==null)
+                logger.error("Unknown parameter type: "+methodParamInfo);
             neededParams.put(paramName, paramValue);
         }
         logger.debugF("Extracted Request Parameters: \n" +
@@ -89,4 +78,31 @@ public class RequestParserImpl implements RequestParser {
         return neededParams;
     }
 
+    /**
+     * This method controle parameters and assure parameters order
+     * @param methodParameters = method.getParameters();
+     * @param requestParameters
+     * @return
+     */
+    public Object[] prepareMethodArgs(Parameter[] methodParameters, Map<String, Object> requestParameters){
+        //Parameter[] methodParameters = method.getParameters();
+        if(methodParameters.length!= requestParameters.size()){
+            logger.error("Extracted parameters are not valid\n" +
+                    "Method parameters: "+Arrays.asList(methodParameters)+"\n" +
+                    "Extracted parameters: "+requestParameters);
+            throw new FrameworkException("Extracted parameters are not valid");
+        }
+
+        Object[] values = new Object[methodParameters.length];
+        int i=0;
+        for(Parameter parameter : methodParameters){
+            String paramName = parameter.getName();
+            if(!requestParameters.containsKey(paramName))
+                throw new FrameworkException("Can't find value for parameter ["+ parameter +"]");
+            values[i++] = WebConfig
+                    .getControllerConfig()
+                    .getFormattedValue(requestParameters.get(paramName), parameter.getType());
+        }
+        return values;
+    }
 }

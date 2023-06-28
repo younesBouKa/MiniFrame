@@ -9,15 +9,15 @@ import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
 import org.tools.Log;
 import org.tools.exceptions.FrameworkException;
-import org.web.WebDispatcher;
-import org.web.listeners.ContextListener;
-import org.web.listeners.RequestListener;
-import org.web.listeners.SessionListener;
+import org.web.server.config.FilterConfig;
+import org.web.server.config.ServerConfig;
+import org.web.server.config.ServletConfig;
+import org.web.servlets.DemoServlet;
+import org.web.servlets.StaticServlet;
+import org.web.servlets.WebDispatcher;
 
 import javax.servlet.ServletException;
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 
 public class TomcatEmbeddedServerFactory implements EmbeddedServerFactory {
     private static final Log logger = Log.getInstance(TomcatEmbeddedServerFactory.class);
@@ -207,52 +207,6 @@ public class TomcatEmbeddedServerFactory implements EmbeddedServerFactory {
         return filterMap;
     }
 
-    public static ServletConfig getWebDispatcherServletConfig(){
-        ServletConfig dispatcherServletConfig = new ServletConfig();
-        dispatcherServletConfig.setServletName("WebDispatcher");
-        dispatcherServletConfig.setServletClass(WebDispatcher.class.getCanonicalName());
-        dispatcherServletConfig.setLoadOnStartup(1);
-        dispatcherServletConfig.setUrlPattern("/api/*");
-        return dispatcherServletConfig;
-    }
-
-    public static ServletConfig getDemoServletConfig(){
-        ServletConfig demoServletConfig = new ServletConfig();
-        demoServletConfig.setServletName("demo");
-        demoServletConfig.setServletClass(DemoServlet.class.getCanonicalName());
-        demoServletConfig.setLoadOnStartup(1);
-        demoServletConfig.setUrlPattern("/demo");
-        return demoServletConfig;
-    }
-
-    public static Set<String> getListenersClasses(){
-        Set<String> listenerClasses = new HashSet<>();
-        listenerClasses.add(ContextListener.class.getCanonicalName());
-        listenerClasses.add(SessionListener.class.getCanonicalName());
-        listenerClasses.add(RequestListener.class.getCanonicalName());
-        return listenerClasses;
-    }
-
-    public static ServerConfig getWebDispatcherServerConfig(){
-        ServerConfig serverConfig = new ServerConfig();
-        // add demo servlet config
-        ServletConfig demoServletConfig = getWebDispatcherServletConfig();
-        serverConfig.addServletConfig(demoServletConfig);
-        // listeners
-        serverConfig.addListener(ContextListener.class.getCanonicalName());
-        serverConfig.addListener(SessionListener.class.getCanonicalName());
-        serverConfig.addListener(RequestListener.class.getCanonicalName());
-        return serverConfig;
-    }
-
-    public static ServerConfig getDemoServerConfig(){
-        ServerConfig serverConfig = new ServerConfig();
-        // add demo servlet config
-        ServletConfig demoServletConfig = getDemoServletConfig();
-        serverConfig.addServletConfig(demoServletConfig);
-        return serverConfig;
-    }
-
     public static void main(String[] args) {
         EmbeddedServerFactory embeddedServerFactory = new TomcatEmbeddedServerFactory();
         // create server config instance
@@ -260,7 +214,7 @@ public class TomcatEmbeddedServerFactory implements EmbeddedServerFactory {
         serverConfig.setPort(8090);
         serverConfig.setContextPath("/webapp");
         serverConfig.setDocBase(new File("Demo/src/main/webapp/").getAbsolutePath());
-        serverConfig.setListenerClasses(TomcatEmbeddedServerFactory.getListenersClasses());
+        serverConfig.setListenerClasses(WebDispatcher.getListenersClasses());
         // add static resources servlet
         ServletConfig staticServletConfig = new ServletConfig();
         staticServletConfig.setServletName("StaticServlet");
@@ -270,11 +224,11 @@ public class TomcatEmbeddedServerFactory implements EmbeddedServerFactory {
         staticServletConfig.addInitParam(StaticServlet.STATIC_RESOURCE_FOLDER_PARAM_NAME, "/WEB-INF/static");
         serverConfig.addServletConfig(staticServletConfig);
         // add web dispatcher servlet
-        ServletConfig dispatcherServletConfig = TomcatEmbeddedServerFactory.getWebDispatcherServletConfig();
+        ServletConfig dispatcherServletConfig = WebDispatcher.getWebDispatcherServletConfig();
         dispatcherServletConfig.setUrlPattern("/api/*");
         serverConfig.addServletConfig(dispatcherServletConfig);
         // add demo servlet
-        ServletConfig demoServletConfig = TomcatEmbeddedServerFactory.getDemoServletConfig();
+        ServletConfig demoServletConfig = DemoServlet.getDemoServletConfig();
         demoServletConfig.setUrlPattern("/demo/*");
         serverConfig.addServletConfig(demoServletConfig);
         // start server

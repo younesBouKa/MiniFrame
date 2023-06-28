@@ -16,6 +16,7 @@
         <module>agent</module>
         <module>aspect</module>
         <module>weaver</module>
+        <module>Data</module>
     </modules>
 
     <properties>

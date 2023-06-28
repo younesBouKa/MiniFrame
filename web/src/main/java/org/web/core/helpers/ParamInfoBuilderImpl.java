@@ -3,6 +3,7 @@ package org.web.core.helpers;
 import org.tools.annotations.AnnotationTools;
 import org.tools.Log;
 import org.tools.exceptions.FrameworkException;
+import org.web.WebConfig;
 import org.web.annotations.params.global.Names;
 import org.web.annotations.params.global.Param;
 import org.web.annotations.params.global.ParamSrc;
@@ -29,7 +30,7 @@ import java.util.stream.Stream;
 public class ParamInfoBuilderImpl implements ParamInfoBuilder {
     private static final Log logger = Log.getInstance(ParamInfoBuilderImpl.class);
     private static final Set<Class> paramTypeAnnotations;
-    private final ControllerConfig Config;
+    private ControllerConfig controllerConfig;
 
     static {
         paramTypeAnnotations = Stream
@@ -38,8 +39,15 @@ public class ParamInfoBuilderImpl implements ParamInfoBuilder {
     }
 
     public ParamInfoBuilderImpl(ControllerConfig controllerConfig) {
-        this.Config = controllerConfig;
+        this.controllerConfig = controllerConfig;
     }
+
+
+    @Override
+    public void autoConfigure() {
+        this.controllerConfig = WebConfig.getControllerConfig();
+    }
+
 
     public ParamInfo build(Parameter parameter, String usedName, ParamSrc source) {
         ParamInfo paramInfo = new ParamInfo();
@@ -65,7 +73,7 @@ public class ParamInfoBuilderImpl implements ParamInfoBuilder {
     }
 
     private void controlSourceAndUsedName(ParamInfo paramInfo) {
-        if(Config.isInjectableParam(paramInfo.getParameter().getType()))
+        if(controllerConfig.isInjectableParam(paramInfo.getParameter().getType()))
             return;
         if (paramInfo.getParamType()==null || paramInfo.getUsedName()==null)
             logger.error("Param from :" +
@@ -78,7 +86,7 @@ public class ParamInfoBuilderImpl implements ParamInfoBuilder {
     }
 
     public void parseForParamNameAndType(ParamInfo paramInfo){
-        if(Config.isInjectableParam(paramInfo.getParameter().getType()))
+        if(controllerConfig.isInjectableParam(paramInfo.getParameter().getType()))
             return;
         Annotation directAnnotation = null;
         // search for typed annotation
@@ -126,7 +134,7 @@ public class ParamInfoBuilderImpl implements ParamInfoBuilder {
     }
 
     public void parseForParamNameAndTypeFromExecutable(ParamInfo paramInfo){
-        if(Config.isInjectableParam(paramInfo.getParameter().getType()))
+        if(controllerConfig.isInjectableParam(paramInfo.getParameter().getType()))
             return;
         Annotation sourceAnnotation = AnnotationTools
                 .getAnnotation(paramInfo
@@ -168,7 +176,7 @@ public class ParamInfoBuilderImpl implements ParamInfoBuilder {
                 Executable executable = paramInfo.getParameter().getDeclaringExecutable();
                 List<Parameter> validParams = Arrays
                         .stream(executable.getParameters())
-                        .filter(parameter1 -> !Config.isInjectableParam(parameter1.getType())) // TODO pay attention here
+                        .filter(parameter1 -> !controllerConfig.isInjectableParam(parameter1.getType())) // TODO pay attention here
                         .collect(Collectors.toList());
                 List<String> validParamsTypes = validParams
                         .stream()

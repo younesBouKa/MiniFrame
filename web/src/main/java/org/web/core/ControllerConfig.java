@@ -5,7 +5,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-public interface ControllerConfig {
+public interface ControllerConfig extends AutoConfigurable {
     Set<Class> getInjectableParamsClasses();
     boolean isInjectableParam(Class paramType);
     boolean isRouteAnnotation(Class<? extends Annotation> annotationClass);

@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-public interface HttpRequestProcessor {
+public interface HttpRequestProcessor extends AutoConfigurable{
 
     /**
      * Invoking route method from controller
@@ -18,6 +18,17 @@ public interface HttpRequestProcessor {
      * @throws IOException
      */
     void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException;
+
+    RouteHandler resolveRouteHandler(HttpServletRequest request);
+
+    /**
+     * Get instance of controller
+     * @param routeHandlerClass
+     * @return
+     */
+    Object getControllerInstance(Class<?> routeHandlerClass, HttpServletRequest request);
+
+    Map<String, Object> getHandlerArgs(HttpServletRequest request, HttpServletResponse response, RouteHandler routeHandler);
 
     /**
      * Prepare parameters,
@@ -41,11 +52,4 @@ public interface HttpRequestProcessor {
      * @return
      */
     Object callRouteMethod(Method method, Object routeHandlerInstance, Map<String, Object> parameters);
-
-    /**
-     * Get instance of controller
-     * @param routeHandlerClass
-     * @return
-     */
-    Object getHandlerInstance(Class<?> routeHandlerClass, HttpServletRequest request);
 }

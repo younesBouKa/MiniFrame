@@ -1,5 +1,9 @@
 package org.web.server;
 
+import org.web.server.config.FilterConfig;
+import org.web.server.config.ServerConfig;
+import org.web.server.config.ServletConfig;
+
 import javax.servlet.ServletException;
 
 public interface EmbeddedServerFactory {

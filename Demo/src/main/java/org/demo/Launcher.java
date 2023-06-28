@@ -1,10 +1,8 @@
 package org.demo;
 
-import com.sun.net.httpserver.HttpHandler;
 import org.aspect.agent.Loader;
 import org.aspect.proxy.ProxyType;
 import org.aspect.proxy.Wrapper;
-import org.demo.Server.Server;
 import org.demo.dao.UserDAO;
 import org.demo.services.ProductService;
 import org.demo.services.UserService;
@@ -16,7 +14,6 @@ import org.injection.annotations.Component;
 import org.injection.core.providers.BeanProvider;
 import org.injection.core.data.AlternativeInstance;
 import org.injection.core.data.ScopeInstance;
-import org.injection.core.providers.BeanProvider;
 import org.injection.core.providers.BeanResolverImpl;
 import org.injection.others.DebuggerInstance;
 import org.injection.others.TestBean;
@@ -25,11 +22,15 @@ import org.tools.Log;
 import org.tools.agent.AgentLoader;
 import org.tools.annotations.AnnotationTools;
 import org.tools.annotations.AnnotationTree;
-import org.tools.exceptions.FrameworkException;
 import org.web.WebConfig;
 import org.web.annotations.WebScanPackages;
 import org.web.filters.basic.GzipFilter;
 import org.web.server.*;
+import org.web.server.config.ServerConfig;
+import org.web.server.config.ServletConfig;
+import org.web.servlets.DemoServlet;
+import org.web.servlets.StaticServlet;
+import org.web.servlets.WebDispatcher;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -83,7 +84,7 @@ public class Launcher {
         serverConfig.setPort(8090);
         serverConfig.setContextPath("/webapp");
         serverConfig.setDocBase(new File("Demo/src/main/webapp/").getAbsolutePath());
-        serverConfig.setListenerClasses(TomcatEmbeddedServerFactory.getListenersClasses());
+        serverConfig.setListenerClasses(WebDispatcher.getListenersClasses());
         // add jsp servlet
         ServletConfig jspServletConfig = new ServletConfig();
         jspServletConfig.setServletName("JspServlet");
@@ -101,11 +102,11 @@ public class Launcher {
         staticServletConfig.addInitParam(StaticServlet.STATIC_RESOURCE_FOLDER_PARAM_NAME, "/WEB-INF/static");
         serverConfig.addServletConfig(staticServletConfig);
         // add web dispatcher servlet
-        ServletConfig dispatcherServletConfig = TomcatEmbeddedServerFactory.getWebDispatcherServletConfig();
+        ServletConfig dispatcherServletConfig = WebDispatcher.getWebDispatcherServletConfig();
         dispatcherServletConfig.setUrlPattern("/api/*");
         serverConfig.addServletConfig(dispatcherServletConfig);
         // add demo servlet
-        ServletConfig demoServletConfig = TomcatEmbeddedServerFactory.getDemoServletConfig();
+        ServletConfig demoServletConfig = DemoServlet.getDemoServletConfig();
         demoServletConfig.setUrlPattern("/demo/*");
         serverConfig.addServletConfig(demoServletConfig);
         // start server
@@ -249,28 +250,6 @@ public class Launcher {
                 .wrap(toto_2);
         logger.debug("testJassProxyAspect: "+wrappedToto_2.titi());
         logger.debug("testJassProxyAspect: "+ Toto.tata());
-    }
-    public static void testWeb() throws Exception {
-        Map<String, HttpHandler> handlersMap = WebConfig
-                .getControllerProcessor()
-                .getHttpHandlers();
-        handlersMap.put("/echo", httpExchange -> {
-            String requestMethod = httpExchange.getRequestMethod();
-            String requestPath = httpExchange.getRequestURI().getPath();
-            logger.debug(String.format(
-                    "New Request received, Method: %s, Path: %s\n",
-                    requestMethod, requestPath
-            ));
-            // return response
-            String result = "Hello, it's working..";
-            httpExchange.sendResponseHeaders(200,result.length());
-            OutputStream os = httpExchange.getResponseBody();
-            os.write(result.getBytes());
-            os.close();
-        });
-        Server.init(9090, handlersMap);
-        Server.setFilters(Arrays.asList(new GzipFilter()));
-        Server.start();
     }
 
     public static void testCustomQualifierManager(){

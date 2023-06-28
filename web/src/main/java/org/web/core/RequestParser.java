@@ -8,20 +8,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public interface RequestParser {
+public interface RequestParser extends AutoConfigurable{
 
     /**
      * This method controle parameters and assure parameters order
-     * @param method
-     * @param parameters
+     * @param methodParameters
+     * @param requestParameters
      * @return
      */
-    public Object[] formatParamsValues(Method method, Map<String, Object> parameters);
+    Object[] prepareMethodArgs(Parameter[] methodParameters, Map<String, Object> requestParameters);
 
     /**
      * Extract parameters values from query, body, header and path
@@ -33,21 +33,17 @@ public interface RequestParser {
      */
     Map<String, Object> extractParametersRawValues(HttpServletRequest request, HttpServletResponse response, Set<ParamInfo> paramsInfo, String handlerPath) throws IOException;
 
-    default Map<String, Object> getQueryParams(HttpServletRequest request) throws UnsupportedEncodingException {
-        Map<String, Object> queryParams = new HashMap<>();
-        String query = request.getQueryString();
-        // get params from query
-        parseQuery(query, queryParams);
-        return queryParams;
+    default Map<String, Object> getQueryParams(String requestQuery) throws UnsupportedEncodingException { // requestQuery =  request.getQueryString();
+        return parseQuery(requestQuery);
     }
 
     default Map<String, Object> getBodyParams(HttpServletRequest request) throws IOException {
-        Map<String, Object> bodyParams = new HashMap<>();
+        Map<String, Object> bodyParams;
         // get params from body (FIXME to see later)
         InputStreamReader isr = new InputStreamReader(request.getInputStream(), StandardCharsets.UTF_8);
         BufferedReader br = new BufferedReader(isr);
         String body = br.readLine();
-        parseQuery(body, bodyParams);
+        bodyParams = parseQuery(body);
         return bodyParams;
     }
 
@@ -62,10 +58,13 @@ public interface RequestParser {
         return headerParams;
     }
 
-    default Map<String, Object> getPathParams(HttpServletRequest request, String handlerPath){
+    default Map<String, Object> getPathParams(String requestPath, String handlerPath){
         Map<String, Object> pathParams = new HashMap<>();
+        if(handlerPath==null || handlerPath.trim().isEmpty()
+                || requestPath==null || requestPath.trim().isEmpty())
+            return pathParams;
         String[] handlerPathParts = handlerPath.split("//");
-        String[] requestPathParts = request.getPathInfo().split("//");
+        String[] requestPathParts = requestPath.split("//");
         if(handlerPathParts.length != requestPathParts.length)
             return pathParams;
         for(int i=0; i<handlerPathParts.length; i++){
@@ -80,12 +79,8 @@ public interface RequestParser {
         return pathParams;
     }
 
-    default boolean validateParameters(Map<String, Object> parametersValues, Set<ParamInfo> paramsInfo){
-        // FIXME to see later using validation annotations (see if we can use spec)
-        return true;
-    }
-
-    default void parseQuery(String query, Map<String,Object> parameters) throws UnsupportedEncodingException {
+    default Map<String, Object> parseQuery(String query) throws UnsupportedEncodingException {
+        Map<String, Object> parameters = new HashMap<>();
         if (query != null) {
             String pairs[] = query.split("[&]");
             for (String pair : pairs) {
@@ -119,6 +114,7 @@ public interface RequestParser {
                 }
             }
         }
+        return parameters;
     }
 
 }

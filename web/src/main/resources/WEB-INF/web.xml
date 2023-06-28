@@ -31,7 +31,7 @@
 
   <servlet>
     <servlet-name>WebDispatcher</servlet-name>
-    <servlet-class>org.web.WebDispatcher</servlet-class>
+    <servlet-class>org.web.servlets.WebDispatcher</servlet-class>
   </servlet>
 
   <servlet-mapping>

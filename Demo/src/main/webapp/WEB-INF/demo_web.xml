@@ -45,7 +45,7 @@
 
   <servlet>
     <servlet-name>WebDispatcher</servlet-name>
-    <servlet-class>org.web.WebDispatcher</servlet-class>
+    <servlet-class>org.web.servlets.WebDispatcher</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
 

@@ -1,9 +1,15 @@
-package org.web;
+package org.web.servlets;
 
 import org.tools.ClassFinder;
 import org.tools.Log;
+import org.web.WebConfig;
+import org.web.WebContext;
+import org.web.WebProvider;
 import org.web.core.HttpRequestProcessor;
-import org.web.core.processors.HttpRequestProcessorImpl;
+import org.web.listeners.ContextListener;
+import org.web.listeners.RequestListener;
+import org.web.listeners.SessionListener;
+import org.web.server.config.ServletConfig;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -16,6 +22,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,7 +31,6 @@ import static org.web.Constants.*;
 public class WebDispatcher extends HttpServlet {
     private static final Log logger = Log.getInstance(WebDispatcher.class);
     private HttpRequestProcessor httpRequestProcessor;
-    private WebContext webContext;
 
     public void init() throws ServletException {
         logger.info("WebDispatcher init");
@@ -44,11 +50,11 @@ public class WebDispatcher extends HttpServlet {
         ClassFinder.addToClassPath(webAppPaths);
         // add web context to servlet context attributes
         ServletContext ctx = getServletContext();
-        webContext = WebContext.init();
+        WebContext webContext = WebContext.init();
         ctx.setAttribute(WEB_CONTEXT, webContext);
         ctx.setAttribute(INJECTION_CONFIG, webContext.getInjectionConfig());
-        // init Web request processor with web context
-        httpRequestProcessor = new HttpRequestProcessorImpl(webContext);
+        // init http request processor with web context
+        httpRequestProcessor = WebConfig.getHttpRequestProcessor();
         super.init();
     }
 
@@ -66,41 +72,27 @@ public class WebDispatcher extends HttpServlet {
         request.setAttribute(REQUEST_WEB_PROVIDER, webProvider);
     }
 
-    /**
-     * Calling handler executor
-     * @param req
-     * @param resp
-     * @throws IOException
-     */
-    public void callHandler(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         logger.info("New request received, RequestURI: "+req.getRequestURI());
         updateRequestAttribute(req);
         httpRequestProcessor.processRequest(req, resp);
     }
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        callHandler(req, resp);
+    public static ServletConfig getWebDispatcherServletConfig(){
+        ServletConfig dispatcherServletConfig = new ServletConfig();
+        dispatcherServletConfig.setServletName("WebDispatcher");
+        dispatcherServletConfig.setServletClass(WebDispatcher.class.getCanonicalName());
+        dispatcherServletConfig.setLoadOnStartup(1);
+        dispatcherServletConfig.setUrlPattern("/api/*");
+        return dispatcherServletConfig;
     }
 
-    @Override
-    protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        callHandler(req, resp);
+    public static Set<String> getListenersClasses(){
+        Set<String> listenerClasses = new HashSet<>();
+        listenerClasses.add(ContextListener.class.getCanonicalName());
+        listenerClasses.add(SessionListener.class.getCanonicalName());
+        listenerClasses.add(RequestListener.class.getCanonicalName());
+        return listenerClasses;
     }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        callHandler(req, resp);
-    }
-
-    @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        callHandler(req, resp);
-    }
-
-    @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        callHandler(req, resp);
-    }
-
 }

@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Set;
 
-public interface MethodInfoBuilder {
+public interface MethodInfoBuilder extends AutoConfigurable {
 
     MethodInfo build(Method method);
     Set<ParamInfo> prepareParamInfo(Method method);

@@ -3,6 +3,7 @@ package org.web.core.helpers;
 import org.tools.Log;
 import org.tools.annotations.AnnotationTools;
 import org.tools.exceptions.FrameworkException;
+import org.web.WebConfig;
 import org.web.annotations.methods.Route;
 import org.web.annotations.params.global.Names;
 import org.web.annotations.params.global.ParamSrc;
@@ -25,12 +26,18 @@ import java.util.stream.Collectors;
 
 public class MethodInfoBuilderImpl implements MethodInfoBuilder {
     private static final Log logger = Log.getInstance(MethodInfoBuilderImpl.class);
-    private final ControllerConfig Config;
-    private final ParamInfoBuilder paramInfoBuilder;
+    private ControllerConfig controllerConfig;
+    private ParamInfoBuilder paramInfoBuilder;
 
     public MethodInfoBuilderImpl(ControllerConfig controllerConfig, ParamInfoBuilder paramInfoBuilder){
-        this.Config = controllerConfig;
+        this.controllerConfig = controllerConfig;
         this.paramInfoBuilder = paramInfoBuilder;
+    }
+
+    @Override
+    public void autoConfigure() {
+        this.controllerConfig = WebConfig.getControllerConfig();
+        this.paramInfoBuilder = WebConfig.getParamInfoBuilder(this.controllerConfig);
     }
 
     public MethodInfo build(Method method) {
@@ -109,7 +116,7 @@ public class MethodInfoBuilderImpl implements MethodInfoBuilder {
     }
 
     public String getParamNameFromMethodAnnotation(Method method , Parameter parameter){
-        if(Config.isInjectableParam(parameter.getType()))
+        if(controllerConfig.isInjectableParam(parameter.getType()))
             return null;
         Annotation namesAnnotation = AnnotationTools
                 .getAnnotation(method, Names.class);
@@ -121,7 +128,7 @@ public class MethodInfoBuilderImpl implements MethodInfoBuilder {
                 String[] names = (String[]) nameMethod.invoke(namesAnnotation, null);
                 List<Parameter> validParams = Arrays
                         .stream(method.getParameters())
-                        .filter(parameter1 -> !Config.isInjectableParam(parameter1.getType())) // TODO pay attention here we can add
+                        .filter(parameter1 -> !controllerConfig.isInjectableParam(parameter1.getType())) // TODO pay attention here we can add
                         .collect(Collectors.toList());
                 List<String> validParamsTypes = validParams
                         .stream()
@@ -163,7 +170,7 @@ public class MethodInfoBuilderImpl implements MethodInfoBuilder {
     }
 
     public ParamSrc getParamSourceFromMethodAnnotation(Method method , Parameter parameter){
-        if(Config.isInjectableParam(parameter.getType()))
+        if(controllerConfig.isInjectableParam(parameter.getType()))
             return null;
         Annotation sourceAnnotation = AnnotationTools
                 .getAnnotation(method, Source.class);

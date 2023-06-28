@@ -1,4 +1,4 @@
-package org.web.server;
+package org.web.servlets;
 
 import org.tools.Log;
 import org.tools.exceptions.FrameworkException;
