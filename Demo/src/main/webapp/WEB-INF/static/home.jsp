@@ -14,17 +14,17 @@
 <%@ page import="org.web.Constants" %>
 <%@ page import="org.injection.core.global.BeanContainer" %>
 <%@ page import="org.web.WebConfig" %>
-<%@ page import="org.web.WebContext" %>
+<%@ page import="org.web.WebProviderBuilder" %>
 
 <%
-    WebProvider webProvider = (WebProvider) request.getAttribute(Constants.REQUEST_WEB_PROVIDER);
+    WebProvider webProvider = (WebProvider) request.getAttribute(Constants.WEB_PROVIDER);
     ProductService productService1 = webProvider.getBeanInstance(ProductService.class, SessionScope.class);
     ProductService productService2 = webProvider.getBeanInstance(ProductService.class, SessionScope.class);
     UserService userService = webProvider.getBeanInstance(UserService.class, SessionScope.class, FirstFound.class);
     OrderService orderService1 = webProvider.getBeanInstance(OrderService.class, RequestScope.class);
     OrderService orderService2 = webProvider.getBeanInstance(OrderService.class, RequestScope.class);
-    WebContext webContext = (WebContext)request.getAttribute(Constants.WEB_CONTEXT);
-    InjectionConfig injectionConfig = webContext.getInjectionConfig();
+    WebProviderBuilder webProviderBuilder = (WebProviderBuilder)request.getAttribute(Constants.WEB_PROVIDER_BUILDER);
+    InjectionConfig injectionConfig = webProviderBuilder.getInjectionConfig();
     BeanContainer beanContainer = injectionConfig.getBeanContainer();
     Set<BeanInstance> containerCache = beanContainer.getBeansWithFilter((beanInstance)->true);
 %>

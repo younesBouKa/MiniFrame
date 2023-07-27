@@ -2,9 +2,12 @@ package org.web;
 
 import org.injection.InjectionConfig;
 import org.tools.exceptions.FrameworkException;
-import org.web.core.*;
-import org.web.core.helpers.*;
-import org.web.core.processors.*;
+import org.web.core.config.ControllerConfig;
+import org.web.core.config.ControllerConfigImpl;
+import org.web.core.controller.ControllerProcessor;
+import org.web.core.controller.ControllerProcessorImpl;
+import org.web.core.method.*;
+import org.web.core.request.*;
 
 import java.io.IOException;
 import java.io.InputStream;

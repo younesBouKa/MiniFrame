@@ -3,9 +3,9 @@ package org.web.servlets;
 import org.tools.ClassFinder;
 import org.tools.Log;
 import org.web.WebConfig;
-import org.web.WebContext;
+import org.web.WebProviderBuilder;
 import org.web.WebProvider;
-import org.web.core.HttpRequestProcessor;
+import org.web.core.request.HttpRequestProcessor;
 import org.web.listeners.ContextListener;
 import org.web.listeners.RequestListener;
 import org.web.listeners.SessionListener;
@@ -24,6 +24,8 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static org.web.Constants.*;
@@ -31,6 +33,7 @@ import static org.web.Constants.*;
 public class WebDispatcher extends HttpServlet {
     private static final Log logger = Log.getInstance(WebDispatcher.class);
     private HttpRequestProcessor httpRequestProcessor;
+    private ExecutorService executorService;
 
     public void init() throws ServletException {
         logger.info("WebDispatcher init");
@@ -50,33 +53,41 @@ public class WebDispatcher extends HttpServlet {
         ClassFinder.addToClassPath(webAppPaths);
         // add web context to servlet context attributes
         ServletContext ctx = getServletContext();
-        WebContext webContext = WebContext.init();
-        ctx.setAttribute(WEB_CONTEXT, webContext);
-        ctx.setAttribute(INJECTION_CONFIG, webContext.getInjectionConfig());
+        WebProviderBuilder webProviderBuilder = WebProviderBuilder.getInstance();
+        ctx.setAttribute(WEB_PROVIDER_BUILDER, webProviderBuilder);
+        ctx.setAttribute(INJECTION_CONFIG, webProviderBuilder.getInjectionConfig());
         // init http request processor with web context
         httpRequestProcessor = WebConfig.getHttpRequestProcessor();
+        // init executor
+        executorService = Executors.newCachedThreadPool();
         super.init();
     }
 
     public void updateRequestAttribute(HttpServletRequest request){
         ServletContext ctx = getServletContext();
         HttpSession session = request.getSession();
-        WebContext webContext = (WebContext) ctx.getAttribute(WEB_CONTEXT);
-        if(webContext == null){
-            webContext = WebContext.init();
-            ctx.setAttribute(WEB_CONTEXT, webContext);
-            ctx.setAttribute(INJECTION_CONFIG, webContext.getInjectionConfig());
+        WebProviderBuilder webProviderBuilder = (WebProviderBuilder) ctx.getAttribute(WEB_PROVIDER_BUILDER);
+        if(webProviderBuilder == null){
+            webProviderBuilder = WebProviderBuilder.getInstance();
+            ctx.setAttribute(WEB_PROVIDER_BUILDER, webProviderBuilder);
+            ctx.setAttribute(INJECTION_CONFIG, webProviderBuilder.getInjectionConfig());
         }
-        WebProvider webProvider = webContext.initWebProvider(session, request);
-        request.setAttribute(WEB_CONTEXT, webContext);
-        request.setAttribute(REQUEST_WEB_PROVIDER, webProvider);
+        WebProvider webProvider = webProviderBuilder.build(session, request);
+        request.setAttribute(WEB_PROVIDER_BUILDER, webProviderBuilder);
+        request.setAttribute(WEB_PROVIDER, webProvider);
     }
 
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
         logger.info("New request received, RequestURI: "+req.getRequestURI());
         updateRequestAttribute(req);
-        httpRequestProcessor.processRequest(req, resp);
+        executorService.submit(()->{
+            try {
+                httpRequestProcessor.processRequest(req, resp);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public static ServletConfig getWebDispatcherServletConfig(){

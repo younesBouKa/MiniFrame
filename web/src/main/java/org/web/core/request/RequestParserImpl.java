@@ -1,11 +1,10 @@
-package org.web.core.helpers;
+package org.web.core.request;
 
 import org.tools.Log;
 import org.tools.exceptions.FrameworkException;
 import org.web.WebConfig;
 import org.web.annotations.params.global.ParamSrc;
-import org.web.core.ControllerConfig;
-import org.web.core.RequestParser;
+import org.web.core.config.ControllerConfig;
 import org.web.data.ParamInfo;
 
 import javax.servlet.http.HttpServletRequest;
@@ -85,10 +84,9 @@ public class RequestParserImpl implements RequestParser {
      * @return
      */
     public Object[] prepareMethodArgs(Parameter[] methodParameters, Map<String, Object> requestParameters){
-        //Parameter[] methodParameters = method.getParameters();
-        if(methodParameters.length!= requestParameters.size()){
+        if(methodParameters.length < requestParameters.size()){
             logger.error("Extracted parameters are not valid\n" +
-                    "Method parameters: "+Arrays.asList(methodParameters)+"\n" +
+                    "Accepted method parameters: "+Arrays.asList(methodParameters)+"\n" +
                     "Extracted parameters: "+requestParameters);
             throw new FrameworkException("Extracted parameters are not valid");
         }

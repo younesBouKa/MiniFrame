@@ -1,4 +1,4 @@
-package org.web.core.helpers;
+package org.web.core.method;
 
 import org.tools.annotations.AnnotationTools;
 import org.tools.Log;
@@ -12,8 +12,7 @@ import org.web.annotations.params.types.BodyParam;
 import org.web.annotations.params.types.HeaderParam;
 import org.web.annotations.params.types.PathParam;
 import org.web.annotations.params.types.QueryParam;
-import org.web.core.ControllerConfig;
-import org.web.core.ParamInfoBuilder;
+import org.web.core.config.ControllerConfig;
 import org.web.data.ParamInfo;
 
 import java.lang.annotation.Annotation;

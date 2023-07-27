@@ -1,5 +1,6 @@
-package org.web.core;
+package org.web.core.request;
 
+import org.web.core.AutoConfigurable;
 import org.web.data.ParamInfo;
 
 import javax.servlet.http.HttpServletRequest;
@@ -13,7 +14,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public interface RequestParser extends AutoConfigurable{
+public interface RequestParser extends AutoConfigurable {
 
     /**
      * This method controle parameters and assure parameters order

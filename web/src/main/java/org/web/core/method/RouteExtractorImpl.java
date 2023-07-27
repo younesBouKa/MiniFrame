@@ -1,4 +1,4 @@
-package org.web.core.processors;
+package org.web.core.method;
 
 import org.tools.Log;
 import org.tools.annotations.AnnotationTools;
@@ -6,9 +6,7 @@ import org.tools.exceptions.FrameworkException;
 import org.web.WebConfig;
 import org.web.annotations.methods.Route;
 import org.web.annotations.others.Controller;
-import org.web.core.ControllerConfig;
-import org.web.core.MethodInfoBuilder;
-import org.web.core.RouteExtractor;
+import org.web.core.config.ControllerConfig;
 import org.web.data.MethodInfo;
 import org.web.data.RouteHandler;
 

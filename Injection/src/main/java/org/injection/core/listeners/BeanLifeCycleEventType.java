@@ -1,6 +1,6 @@
 package org.injection.core.listeners;
 
-public interface BeanLifeCycleEvent {
+public interface BeanLifeCycleEventType {
     // to see later
     String preBeanBuilding = "preBeanBuilding";
     String postBeanBuilding = "postBeanBuilding";

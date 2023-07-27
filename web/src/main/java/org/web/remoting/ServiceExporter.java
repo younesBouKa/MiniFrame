@@ -14,7 +14,7 @@ public class ServiceExporter {
     private static ServerConfig serverConfig;
     private static final Log logger = Log.getInstance(ServiceExporter.class);
 
-    public void expose(String serviceUrl, Class<?> serviceInterface, Object serviceInstance) {
+    public void register(String serviceUrl, Class<?> serviceInterface, Object serviceInstance) {
         checkServerSetup();
         ServletConfig servletConfig = new ServletConfig();
         servletConfig.setServletName(serviceInterface.getCanonicalName());

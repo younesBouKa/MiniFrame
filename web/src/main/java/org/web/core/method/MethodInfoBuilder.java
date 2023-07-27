@@ -1,6 +1,7 @@
-package org.web.core;
+package org.web.core.method;
 
 import org.web.annotations.params.global.ParamSrc;
+import org.web.core.AutoConfigurable;
 import org.web.data.MethodInfo;
 import org.web.data.ParamInfo;
 

@@ -1,9 +1,8 @@
-package org.web.core.helpers;
+package org.web.core.request;
 
 import org.tools.ClassFinder;
 import org.tools.Log;
 import org.web.WebConfig;
-import org.web.core.RequestResolver;
 import org.web.data.RouteHandler;
 
 import java.util.HashMap;

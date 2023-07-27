@@ -1,5 +1,6 @@
-package org.web.core;
+package org.web.core.request;
 
+import org.web.core.AutoConfigurable;
 import org.web.data.ResponseWrapper;
 import org.web.data.RouteHandler;
 
@@ -9,7 +10,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-public interface HttpRequestProcessor extends AutoConfigurable{
+public interface HttpRequestProcessor extends AutoConfigurable {
 
     /**
      * Invoking route method from controller
@@ -19,7 +20,7 @@ public interface HttpRequestProcessor extends AutoConfigurable{
      */
     void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException;
 
-    RouteHandler resolveRouteHandler(HttpServletRequest request);
+    RouteHandler resolveRequest(HttpServletRequest request);
 
     /**
      * Get instance of controller
@@ -48,8 +49,8 @@ public interface HttpRequestProcessor extends AutoConfigurable{
      * Calling method that represent route handler
      * @param method
      * @param routeHandlerInstance
-     * @param parameters
+     * @param methodArgs
      * @return
      */
-    Object callRouteMethod(Method method, Object routeHandlerInstance, Map<String, Object> parameters);
+    Object callRouteMethod(Method method, Object routeHandlerInstance, Object[] methodArgs);
 }

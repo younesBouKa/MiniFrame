@@ -1,15 +1,12 @@
-package org.web.core.processors;
+package org.web.core.request;
 
 import org.injection.core.data.ScopeInstance;
 import org.tools.Log;
 import org.tools.exceptions.FrameworkException;
 import org.web.WebConfig;
-import org.web.WebContext;
+import org.web.WebProviderBuilder;
 import org.web.annotations.scopes.RequestScope;
 import org.web.annotations.scopes.SessionScope;
-import org.web.core.HttpRequestProcessor;
-import org.web.core.RequestParser;
-import org.web.core.RequestResolver;
 import org.web.data.MethodInfo;
 import org.web.data.ParamInfo;
 import org.web.data.ResponseWrapper;
@@ -21,28 +18,29 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class HttpRequestProcessorImpl implements HttpRequestProcessor {
     private static final Log logger = Log.getInstance(HttpRequestProcessorImpl.class);
-    private WebContext webContext;
+    private WebProviderBuilder webProviderBuilder;
     private RequestParser requestParser;
     private RequestResolver requestResolver;
     private Map<Class<?>, Object> controllersCache;
 
-    public HttpRequestProcessorImpl(WebContext webContext, RequestResolver requestResolver, RequestParser requestParser){
-        if(webContext==null)
-            webContext = WebContext.init();
-        this.webContext = webContext;
-        controllersCache = new HashMap<>();
+    public HttpRequestProcessorImpl(WebProviderBuilder webProviderBuilder, RequestResolver requestResolver, RequestParser requestParser){
+        if(webProviderBuilder==null)
+            webProviderBuilder = WebProviderBuilder.getInstance();
+        this.webProviderBuilder = webProviderBuilder;
+        this.controllersCache = new HashMap<>();
         this.requestParser = requestParser;
         this.requestResolver = requestResolver;
     }
 
     @Override
     public void autoConfigure() {
-        this.webContext = WebContext.init();
+        this.webProviderBuilder = WebProviderBuilder.getInstance();
         this.controllersCache = new HashMap<>();
         this.requestParser = WebConfig.getRequestParser();
         this.requestResolver = WebConfig.getRequestResolver();
@@ -56,9 +54,7 @@ public class HttpRequestProcessorImpl implements HttpRequestProcessor {
      */
     public void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
         ResponseWrapper responseWrapper;
-        String httpMethod = request.getMethod();
-        String uri = request.getPathInfo();
-        RouteHandler routeHandler = resolveRouteHandler(request);
+        RouteHandler routeHandler = resolveRequest(request);
         if(routeHandler!=null){
             responseWrapper = executeRouteHandler(request, response, routeHandler);
             response.setStatus(200);
@@ -66,13 +62,15 @@ public class HttpRequestProcessorImpl implements HttpRequestProcessor {
                     .write(responseWrapper.getBytes());
             // TODO for test only
             logger.info("Bean Container content after request: "+
-                    webContext
+                    webProviderBuilder
                             .getInjectionConfig()
                             .getBeanContainer()
                             .getBeansWithFilter(beanInstance->true)
                             .size()
             );
         }else{
+            String httpMethod = request.getMethod();
+            String uri = request.getPathInfo();
             StringBuilder stringBuffer = new StringBuilder();
             stringBuffer
                     .append("Route not found [").append(httpMethod).append(":").append(uri).append("]\n");
@@ -95,8 +93,8 @@ public class HttpRequestProcessorImpl implements HttpRequestProcessor {
         }
     }
 
-    public RouteHandler resolveRouteHandler(HttpServletRequest request){
-        return requestResolver.resolveRouteHandler(request);
+    public RouteHandler resolveRequest(HttpServletRequest request){
+        return requestResolver.resolveRequest(request);
     }
 
     /**
@@ -109,7 +107,7 @@ public class HttpRequestProcessorImpl implements HttpRequestProcessor {
             Set<ScopeInstance> scopeInstances = new HashSet<>();
             scopeInstances.add(new ScopeInstance(SessionScope.class, request.getSession()));
             scopeInstances.add(new ScopeInstance(RequestScope.class, request));
-            Class<?> controllerScope = webContext
+            Class<?> controllerScope = webProviderBuilder
                     .getInjectionConfig()
                     .getScopeManager()
                     .getClassScope(controllerClass);
@@ -118,8 +116,8 @@ public class HttpRequestProcessorImpl implements HttpRequestProcessor {
             if(Singleton.class.equals(controllerScope) && controllersCache!=null && controllersCache.containsKey(controllerClass))
                 return controllerClass.cast(controllersCache.get(controllerClass));
 
-            Object bean = webContext
-                    .initWebProvider(request.getSession(), request)
+            Object bean = webProviderBuilder
+                    .build(request.getSession(), request)
                     .getBeanInstance(controllerClass, null, scopeInstances, controllerScope);
             if(Singleton.class.equals(controllerScope)){
                 if(controllersCache==null)
@@ -161,10 +159,12 @@ public class HttpRequestProcessorImpl implements HttpRequestProcessor {
         logger.debugF("Execute Handler: %s \n", routeHandler);
         long startTime = System.currentTimeMillis();
         Method method = routeHandler.getRouteMethod();
-        // method params
-        // extract request parameters values
+        // extract request parameters values and method args
         Map<String, Object> parameters = getHandlerArgs(request, response, routeHandler);
         logger.debugF("Request parameters raw values: %s \n",parameters);
+        Parameter[] methodParams = method.getParameters();
+        Object[] methodArgs = requestParser.prepareMethodArgs(methodParams, parameters);
+        logger.debugF("Route method args: %s \n",Arrays.toString(methodArgs));
         // get controller instance
         Object controllerInstance = null;
         if(!Modifier.isStatic(method.getModifiers())){
@@ -175,7 +175,7 @@ public class HttpRequestProcessorImpl implements HttpRequestProcessor {
                 throw new FrameworkException("Can't get instance of controller "+methodDeclaringClass.getCanonicalName()+"");
         }
         // call handler method
-        Object result = callRouteMethod(method, controllerInstance, parameters);
+        Object result = callRouteMethod(method, controllerInstance, methodArgs);
         logger.debug("Execution duration ["+routeHandler.getMethodHttp()+":"+routeHandler.getRootPath()+"] => "+(System.currentTimeMillis()-startTime)+" Millis");
         // return response
         return new ResponseWrapper(result);
@@ -185,16 +185,15 @@ public class HttpRequestProcessorImpl implements HttpRequestProcessor {
      * Calling method that represent route handler
      * @param method
      * @param controllerInstance
-     * @param parameters
+     * @param methodArgs
      * @return
      */
-    public Object callRouteMethod(Method method, Object controllerInstance, Map<String, Object> parameters){
+    public Object callRouteMethod(Method method, Object controllerInstance, Object[] methodArgs){
         try {
-            logger.debugF("Invoke route method: %s, from controller: %s, with parameters: %s",
+            logger.debugF("Invoke route method: %s, from controller: %s, with args: %s",
                     method.getName(),
                     method.getDeclaringClass().getCanonicalName(),
-                    parameters);
-            Object[] methodArgs = requestParser.prepareMethodArgs(method.getParameters(), parameters);
+                    methodArgs);
             logger.debugF("Parameters invoking values: %s", Arrays.stream(methodArgs).collect(Collectors.toList()));
             Object result = method.invoke(controllerInstance, methodArgs);
             logger.debugF("Method return value: %s", result);

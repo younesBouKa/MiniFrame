@@ -1,4 +1,6 @@
-package org.web.core;
+package org.web.core.config;
+
+import org.web.core.AutoConfigurable;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

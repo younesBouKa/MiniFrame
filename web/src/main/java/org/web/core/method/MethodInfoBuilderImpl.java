@@ -1,4 +1,4 @@
-package org.web.core.helpers;
+package org.web.core.method;
 
 import org.tools.Log;
 import org.tools.annotations.AnnotationTools;
@@ -8,9 +8,7 @@ import org.web.annotations.methods.Route;
 import org.web.annotations.params.global.Names;
 import org.web.annotations.params.global.ParamSrc;
 import org.web.annotations.params.global.Source;
-import org.web.core.ControllerConfig;
-import org.web.core.MethodInfoBuilder;
-import org.web.core.ParamInfoBuilder;
+import org.web.core.config.ControllerConfig;
 import org.web.data.MethodInfo;
 import org.web.data.ParamInfo;
 

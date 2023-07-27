@@ -1,6 +1,5 @@
 package org.injection.core.qualifiers;
 
-import org.injection.core.qualifiers.QualifierPredicate;
 import org.tools.annotations.AnnotationTools;
 import org.tools.exceptions.FrameworkException;
 

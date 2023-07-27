@@ -2,8 +2,8 @@ package org.web.listeners;
 
 import org.injection.core.scopes.ScopeLifeCycle;
 import org.tools.Log;
-import org.web.WebContext;
 import org.web.WebProvider;
+import org.web.WebProviderBuilder;
 import org.web.annotations.scopes.RequestScope;
 
 import javax.servlet.*;
@@ -56,11 +56,11 @@ public class RequestListener implements
         ServletRequest request = servletRequestEvent.getServletRequest();
         scopeInitialized(request);
         ServletContext ctx = servletRequestEvent.getServletContext();
-        WebContext webContext = (WebContext)ctx.getAttribute(WEB_CONTEXT);
-        if(webContext == null){
-            webContext = WebContext.init();
-            ctx.setAttribute(WEB_CONTEXT, webContext);
-            ctx.setAttribute(INJECTION_CONFIG, webContext.getInjectionConfig());
+        WebProviderBuilder webProviderBuilder = (WebProviderBuilder)ctx.getAttribute(WEB_PROVIDER_BUILDER);
+        if(webProviderBuilder == null){
+            webProviderBuilder = WebProviderBuilder.getInstance();
+            ctx.setAttribute(WEB_PROVIDER_BUILDER, webProviderBuilder);
+            ctx.setAttribute(INJECTION_CONFIG, webProviderBuilder.getInjectionConfig());
         }
 
         HttpSession session = null;
@@ -68,9 +68,9 @@ public class RequestListener implements
             HttpServletRequest httpServletRequest = (HttpServletRequest) request;
             session = httpServletRequest.getSession();
         }
-        WebProvider webProvider = webContext.initWebProvider(session, request);
-        request.setAttribute(WEB_CONTEXT, webContext);
-        request.setAttribute(REQUEST_WEB_PROVIDER, webProvider);
+        WebProvider webProvider = webProviderBuilder.build(session, request);
+        request.setAttribute(WEB_PROVIDER_BUILDER, webProviderBuilder);
+        request.setAttribute(WEB_PROVIDER, webProvider);
     }
 
     public Class<? extends Annotation> getScopeType(){

@@ -1,11 +1,10 @@
-package org.web.core.helpers;
+package org.web.core.config;
 
 import com.sun.net.httpserver.HttpExchange;
 import org.tools.annotations.AnnotationTools;
 import org.tools.Log;
 import org.tools.exceptions.FrameworkException;
 import org.web.annotations.methods.*;
-import org.web.core.ControllerConfig;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
